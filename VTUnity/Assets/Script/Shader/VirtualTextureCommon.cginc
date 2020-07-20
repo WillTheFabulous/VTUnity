@@ -1,6 +1,9 @@
 ﻿#ifndef VIRTUAL_TEXTURE_INCLUDED
 #define VIRTUAL_TEXTURE_INCLUDED
 
+
+float4 _VTFeedbackParam;
+
 struct appData
 {
     float4 vertex : POSITION;

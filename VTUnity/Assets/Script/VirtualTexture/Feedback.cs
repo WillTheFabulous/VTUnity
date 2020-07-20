@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngineInternal;
 
 public class Feedback : MonoBehaviour
 {
-
+    [SerializeField]
     private Shader m_FeedbackShader = default;
 
     private Camera m_FeedbackCamera = default;
@@ -19,12 +20,22 @@ public class Feedback : MonoBehaviour
 
     private void OnPreCull()
     {
+        var mainCamera = Camera.main;
+        if(TargetTexture == null)
+        {
+            TargetTexture = new RenderTexture(mainCamera.pixelWidth, mainCamera.pixelHeight, 0);
+            TargetTexture.useMipMap = false;
+            TargetTexture.wrapMode = TextureWrapMode.Clamp;
+            TargetTexture.filterMode = FilterMode.Point;
 
+            m_FeedbackCamera.targetTexture = TargetTexture;
+
+        }
     }
 
     private void OnPreRender()
     {
-     
+        
     }
 
     private void OnPostRender()
