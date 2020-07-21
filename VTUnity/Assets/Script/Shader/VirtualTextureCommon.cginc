@@ -2,7 +2,9 @@
 #define VIRTUAL_TEXTURE_INCLUDED
 
 
-float4 _VTFeedbackParam;
+float _PAGETABLESIZE;
+float _TILESIZE;
+
 
 struct appData
 {
@@ -17,7 +19,7 @@ struct v2f
 };
 
 
-v2f vert(appData v) : SV_Position
+v2f vert(appData v)
 {
     v2f o;
     UNITY_INITIALIZE_OUTPUT(v2f, o);

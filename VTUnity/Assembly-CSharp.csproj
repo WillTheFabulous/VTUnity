@@ -55,6 +55,7 @@
   <ItemGroup>
      <Compile Include="Assets\Script\VirtualTexture\Feedback.cs" />
      <None Include="Assets\Script\Shader\FeedBack.shader" />
+     <None Include="Assets\Script\Shader\Unlit.shader" />
      <None Include="Assets\Script\Shader\VirtualTextureCommon.cginc" />
      <None Include="Assets\Script\Shader\TileGeneration.shader" />
      <None Include="Assets\Script\Shader\TerrainSurface.shader" />

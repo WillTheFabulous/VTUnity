@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngineInternal;
@@ -21,16 +22,39 @@ public class Feedback : MonoBehaviour
     private void OnPreCull()
     {
         var mainCamera = Camera.main;
-        if(TargetTexture == null)
+        if (mainCamera == null)
+            return;
+        
+
+        if (TargetTexture == null)
         {
             TargetTexture = new RenderTexture(mainCamera.pixelWidth, mainCamera.pixelHeight, 0);
             TargetTexture.useMipMap = false;
             TargetTexture.wrapMode = TextureWrapMode.Clamp;
             TargetTexture.filterMode = FilterMode.Point;
-
             m_FeedbackCamera.targetTexture = TargetTexture;
 
+
+            Shader.SetGlobalFloat("_PAGETABLESIZE", 64.0f);
+            Shader.SetGlobalFloat("_TILESIZE", 256.0f);
+            
+            
         }
+        m_FeedbackCamera.targetTexture = TargetTexture;
+
+
+        //var mainCamera = Camera.main;
+        m_FeedbackCamera.transform.position = mainCamera.transform.position;
+        m_FeedbackCamera.transform.rotation = mainCamera.transform.rotation;
+        m_FeedbackCamera.cullingMask = mainCamera.cullingMask;
+        m_FeedbackCamera.projectionMatrix = mainCamera.projectionMatrix;
+        m_FeedbackCamera.fieldOfView = mainCamera.fieldOfView;
+        m_FeedbackCamera.nearClipPlane = mainCamera.nearClipPlane;
+        m_FeedbackCamera.farClipPlane = mainCamera.farClipPlane;
+
+        m_FeedbackCamera.SetReplacementShader(m_FeedbackShader, "VirtualTextureType");
+
+
     }
 
     private void OnPreRender()
@@ -51,11 +75,6 @@ public class Feedback : MonoBehaviour
         m_FeedbackCamera = GetComponent<Camera>();
         if (m_FeedbackCamera == null)
             m_FeedbackCamera = gameObject.AddComponent<Camera>();
-
-
-        var mainCamera = Camera.main;
-        m_FeedbackCamera.CopyFrom(mainCamera);
-        
         
         m_FeedbackCamera.allowHDR = false;
         m_FeedbackCamera.allowMSAA = false;
@@ -63,10 +82,9 @@ public class Feedback : MonoBehaviour
 
         //白色背景
         m_FeedbackCamera.clearFlags = CameraClearFlags.Color;
-        m_FeedbackCamera.backgroundColor = Color.white;
+        m_FeedbackCamera.backgroundColor = Color.blue;
 
-
-        m_FeedbackCamera.SetReplacementShader(m_FeedbackShader, "VirtualTextureType");
+        
 
 
         

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ namespace VirtualTexture
 	{
 		public override void OnInspectorGUI()
 		{
+			
 			if (Application.isPlaying)
 			{
 				OnPlayingInspectorGUI();
@@ -23,10 +25,11 @@ namespace VirtualTexture
 
 
 
-		[Conditional("ENABLE_DEBUG_TEXTURE")]
+		//[Conditional("ENABLE_DEBUG_TEXTURE")]
 		protected void DrawTexture(Texture texture, string label = null)
 		{
 			if (texture == null)
+				//UnityEngine.Debug.Log("is null");
 				return;
 
 			EditorGUILayout.Space();
@@ -39,7 +42,7 @@ namespace VirtualTexture
 			{
 				EditorGUILayout.LabelField(string.Format("Size: {0} X {1}", texture.width, texture.height));
 			}
-
+			//UnityEngine.Debug.Log("is null");
 			EditorGUI.DrawPreviewTexture(GUILayoutUtility.GetAspectRect((float)texture.width / texture.height), texture);
 		}
 	}
