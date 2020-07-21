@@ -82,7 +82,7 @@ public class Feedback : MonoBehaviour
 
         //白色背景
         m_FeedbackCamera.clearFlags = CameraClearFlags.Color;
-        m_FeedbackCamera.backgroundColor = Color.blue;
+        m_FeedbackCamera.backgroundColor = Color.white;
 
         
 
