@@ -26,7 +26,8 @@ Shader "VirtualTexture/Unlit"
 
 			v2f vert (appdata v){
 				v2f o;
-				o.vertex = UnityObjectToClipPos(v.vertex);return o;
+				o.vertex = UnityObjectToClipPos(v.vertex);
+				return o;
 			}
 			
 			fixed4 frag (v2f i) : SV_Target{
