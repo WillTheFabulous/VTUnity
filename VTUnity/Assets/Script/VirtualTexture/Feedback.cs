@@ -32,32 +32,57 @@ public class Feedback : MonoBehaviour
     {
         //CHECK FOR REQUESTS LIST AND UPDATE TEXTURE FROM LAST FRAME
         bool complete = false;
-        while (m_ReadbackRequests.Count > 0)
-        {
-            var req = m_ReadbackRequests.Peek();
 
-            if (req.hasError)
+        if (TargetTexture != null)
+        {
+            var width = TargetTexture.width;
+            var height = TargetTexture.height;
+
+            if(m_ReadbackTexture == null || m_ReadbackTexture.width != width || m_ReadbackTexture.height != height)
             {
-                m_ReadbackRequests.Dequeue();
+                m_ReadbackTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                m_ReadbackTexture.filterMode = FilterMode.Point;
+                m_ReadbackTexture.wrapMode = TextureWrapMode.Clamp;
             }
-            else if (req.done)
+
+            while (m_ReadbackRequests.Count > 0)
             {
-                m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(req.GetData<Color32>());
-                complete = true;
-                m_ReadbackRequests.Dequeue();
+                var req = m_ReadbackRequests.Peek();
+
+                if (req.hasError)
+                {
+                    m_ReadbackRequests.Dequeue();
+                }
+                else if (req.done)
+                {
+                    m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(req.GetData<Color32>());
+                    complete = true;
+                    m_ReadbackRequests.Dequeue();
+                }
+                else
+                {
+                    break;
+                }
             }
-            else
-            {
-                break;
+
+            if (complete)
+            {   /**
+                Color color = m_ReadbackTexture.GetPixel(250,50);
+                print(color.r * 255);
+                print(color.g * 255);
+                print(color.b * 255);
+                print(color.a);
+                **/
+                OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
             }
         }
 
-        if (complete)
-        {
-            OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
-        }
+
+        
+       
 
         //NEW FRAME CONFIGURATION
+
         var mainCamera = Camera.main;
         if (mainCamera == null)
             return;
