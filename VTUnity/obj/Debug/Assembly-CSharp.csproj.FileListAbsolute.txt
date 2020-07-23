@@ -1,0 +1,2 @@
+D:\VTUnity\VTUnity\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache
+D:\VTUnity\VTUnity\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache

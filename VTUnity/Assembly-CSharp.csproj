@@ -56,6 +56,9 @@
      <Compile Include="Assets\Script\VirtualTexture\Feedback.cs" />
      <Compile Include="Assets\Script\VirtualTexture\FeedbackReader.cs" />
      <Compile Include="Assets\Script\VirtualTexture\PageTable.cs" />
+     <Compile Include="Assets\Script\VirtualTexture\PhysicalTexture.cs" />
+     <Compile Include="Assets\Script\VirtualTexture\TextureTileMapping.cs" />
+     <Compile Include="Assets\Script\VirtualTexture\TileGeneration.cs" />
      <None Include="Assets\Script\Shader\FeedBack.shader" />
      <None Include="Assets\Script\Shader\Unlit.shader" />
      <None Include="Assets\Script\Shader\VirtualTextureCommon.cginc" />
