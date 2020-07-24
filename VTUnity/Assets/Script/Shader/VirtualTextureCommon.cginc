@@ -4,6 +4,10 @@
 
 float _PAGETABLESIZE;
 float _TILESIZE;
+float _MAXMIP;
+
+
+sampler2D _LOOKUPTEX;
 
 
 struct appData

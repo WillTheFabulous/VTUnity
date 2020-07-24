@@ -277,6 +277,9 @@ GameObject:
   - component: {fileID: 1031306890}
   - component: {fileID: 1031306889}
   - component: {fileID: 1031306891}
+  - component: {fileID: 1031306894}
+  - component: {fileID: 1031306893}
+  - component: {fileID: 1031306892}
   m_Layer: 0
   m_Name: RVT_Manager
   m_TagString: Untagged
@@ -326,6 +329,54 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_TableSize: 64
   m_MipLevelLimit: 10
+--- !u!114 &1031306892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031306888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 834337c6c120e5a4d8b1c6d4cbf8223c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1031306893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031306888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d2a779c7c9ebc7439dc2d95892f1bee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TileIndex: {x: 0, y: 0}
+  ActiveFrame: 0
+--- !u!114 &1031306894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031306888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 040b41afc81e3714aac4f898a75c15d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PhysicalTextureSize: {x: 0, y: 0}
+  testint: 0
 --- !u!1 &1818620057
 GameObject:
   m_ObjectHideFlags: 0
