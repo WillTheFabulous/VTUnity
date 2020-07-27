@@ -78,9 +78,6 @@ public class Feedback : MonoBehaviour
         }
 
 
-        
-       
-
         //NEW FRAME CONFIGURATION
 
         var mainCamera = Camera.main;
@@ -148,9 +145,7 @@ public class Feedback : MonoBehaviour
 
         //白色背景
         m_FeedbackCamera.clearFlags = CameraClearFlags.Color;
-        m_FeedbackCamera.backgroundColor = Color.white;
-
-               
+        m_FeedbackCamera.backgroundColor = Color.white;       
     }
 
 

@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Numerics;
+using System.Runtime.Serialization.Json;
 using System.Transactions;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using UnityEngine.WSA;
 
 namespace VirtualTexture
 {
@@ -26,6 +28,7 @@ namespace VirtualTexture
         public int MaxMipLevel { get { return Mathf.Min(m_MipLevelLimit, (int)Mathf.Log(TableSize, 2)); } }
 
         //GPU 端使用的页表查询贴图
+        [SerializeField]
         private Texture2D m_LookupTexture = default;
 
         //用于terrain layers blending
@@ -58,12 +61,9 @@ namespace VirtualTexture
             feedBack = (Feedback)GetComponent(typeof(Feedback));
 
             feedBack.OnFeedbackReadComplete += ProcessFeedback;
-
-
             int key = getKey(2, 3, 5);
-            getPage(key);
-            
-
+            int length = mipRectLengthFromKey(key);
+            print(length);
         }
 
         void Update()
@@ -73,25 +73,59 @@ namespace VirtualTexture
 
         private void ProcessFeedback(Texture2D texture)
         {
+            //TODO: MAKE UNIQUE PAGE LIST 多线程处理？
+
+
+            //每一帧 我们将当前feedback texture中 还没有被开始生产的tile 扔入生产队列 并在 quadtree 中插入他的信息
+
+            List<int> UniquePageList = new List<int>();
             foreach(var color in texture.GetRawTextureData<Color32>())
             {
-
+                UseOrCreatePage(color.r, color.g, color.b, quadRootKey);
             }
+
+
+
         }
 
-        private int GetOrCreatePage(int x, int y, int mip)
+        
+
+        
+
+        private int UseOrCreatePage(int x, int y, int mip, int quadKey)
         {
+            if(!Contains(x, y, quadKey))
+            {
+                return -1;
+            }
+            
             return 0; 
         }
 
         private bool Contains(int x, int y, int key)
         {
+            Vector2Int pageXY = getPageXY(key);
+            int rectLength = mipRectLengthFromKey(key);
+            if(pageXY.x <= x && pageXY.y <= y && (pageXY.x + rectLength) > x && (pageXY.y + rectLength) > y)
+            {
+                return true;
+            }
             return false;
         }
 
+
+        //list里的顺序为
+        private List<int> getChilds(int key)
+        {
+            return new List<int>();
+        }
         // 用以生成 8 bits miplevel, 12 bits pageX, 12 bits pageY
         public int getKey(int pageX, int pageY, int mip)
         {
+            if(mip > MaxMipLevel)
+            {
+                mip = MaxMipLevel;
+            }
             int result = MortonCode2(pageX) | (MortonCode2(pageY) << 1);
             result |= (mip << 24);
 
@@ -103,16 +137,25 @@ namespace VirtualTexture
             return key >> 24;
         }
 
-        public Vector2Int getPage(int key)
+        public Vector2Int getPageXY(int key)
         {
-            print(key);
             //mask out mip bits
             int mask = 0x00ffffff;
-            key &= 
+            key &= mask;
+            int pageX = ReverseMortonCode2(key);
+            int pageY = ReverseMortonCode2(key >> 1);
 
-            print(key);
+            return new Vector2Int(pageX, pageY);
+        }
 
-            return new Vector2Int();
+        public int mipRectLengthFromKey(int key)
+        {
+            return mipRectLengthFromMip(getMip(key));
+        }
+
+        public int mipRectLengthFromMip(int mip)
+        {
+            return TableSize / (int)Math.Pow(2, mip);
         }
 
         /** Spreads bits to every other. */
@@ -135,8 +178,6 @@ namespace VirtualTexture
             x = (x ^ (x >> 8)) & 0x0000ffff;
             return x;
         }
-
-       
 
         /**
         public void louzhengqiu(int n)

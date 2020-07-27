@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PhysicalTileInfo : MonoBehaviour
+
+namespace VirtualTexture
 {
-    // Start is called before the first frame update
-
-    public Vector2Int TileIndex = default;
-
-    public int ActiveFrame;
-    void Start()
+    public enum TileStatus
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
+        Uninitialized,
+        Loading,
+        LoadingComplete,
+    };
+    public class PhysicalTileInfo
     {
-        
+        public Vector2Int TileIndex = default;
+
+        public int ActiveFrame;
+
+        public TileStatus tileStatus = TileStatus.Uninitialized;
+       
     }
 }
