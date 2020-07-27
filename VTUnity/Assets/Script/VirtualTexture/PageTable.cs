@@ -74,7 +74,7 @@ namespace VirtualTexture
         private void ProcessFeedback(Texture2D texture)
         {
             //TODO: MAKE UNIQUE PAGE LIST 多线程处理？
-
+            //TODO: 预生产周边的mip level的tile
 
             //每一帧 我们将当前feedback texture中 还没有被开始生产的tile 扔入生产队列 并在 quadtree 中插入他的信息
 
@@ -90,14 +90,17 @@ namespace VirtualTexture
 
         
 
-        
-
         private int UseOrCreatePage(int x, int y, int mip, int quadKey)
         {
             if(!Contains(x, y, quadKey))
             {
                 return -1;
             }
+
+            
+            
+
+            
             
             return 0; 
         }
@@ -117,7 +120,30 @@ namespace VirtualTexture
         //list里的顺序为
         private List<int> getChilds(int key)
         {
-            return new List<int>();
+            int curr_mip = getMip(key);
+
+            if(curr_mip == MaxMipLevel)
+            {
+                return null;
+            }
+            
+            Vector2Int pageXY = getPageXY(key);
+
+            int rectLength = TableSize / (1 << (curr_mip + 1));
+            
+            int child1 = getKey(pageXY.x, pageXY.y, curr_mip + 1);
+            int child2 = getKey(pageXY.x + rectLength, pageXY.y, curr_mip + 1);
+            int child3 = getKey(pageXY.x, pageXY.y + rectLength, curr_mip + 1);
+            int child4 = getKey(pageXY.x + rectLength, pageXY.y + rectLength, curr_mip + 1);
+
+            List<int> result = new List<int>();
+
+            result.Add(child1);
+            result.Add(child2);
+            result.Add(child3);
+            result.Add(child4);
+
+            return result;
         }
         // 用以生成 8 bits miplevel, 12 bits pageX, 12 bits pageY
         public int getKey(int pageX, int pageY, int mip)
