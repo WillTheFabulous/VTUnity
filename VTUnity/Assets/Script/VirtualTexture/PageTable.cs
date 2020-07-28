@@ -97,10 +97,11 @@ namespace VirtualTexture
             int texheight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
 
+            /**
             print(texWidth);
             print(texheight);
             print(textureData.Length);
-
+            **/
             for (int i = 0; i < texWidth; i += 8)
             {
                 for(int j = 0; j < texheight; j += 8)
@@ -110,13 +111,18 @@ namespace VirtualTexture
                     UseOrCreatePage(color.r, color.g, color.b);
                 }
             }
-            //Update after 
+            //Update after DownScale is implemented
             /**
             foreach (var color in texture.GetRawTextureData<Color32>())
             {
                 UseOrCreatePage(color.r, color.g, color.b);
             }
             **/
+
+            foreach(var kv in AddressMapping)
+            {
+                
+            }
 
         }
 
@@ -145,6 +151,8 @@ namespace VirtualTexture
             }//当前page mip大于要求的mip(quadtree 还没加载到那个深度) 我们暂时使用并显示当前page 并把他的child加入生成队列
             else if(getMip(page) > mip)
             {
+                AddressMapping[page].ActiveFrame = Time.frameCount;
+
                 int childQuadKey = getChild(x, y, page);
                 
                 if(childQuadKey == -1)
@@ -155,10 +163,9 @@ namespace VirtualTexture
             }//mip 符合要求 直接使用当前page
             else
             {
-                
+                AddressMapping[page].ActiveFrame = Time.frameCount;
             }
 
-            
             return page; 
         }
 
@@ -228,7 +235,7 @@ namespace VirtualTexture
 
             AddressMapping[quadKey] = info;
 
-            tileGenerator.GeneratePage(quadRootKey);
+            tileGenerator.GeneratePage(quadKey);
         }
 
 

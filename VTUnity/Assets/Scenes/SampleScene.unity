@@ -329,6 +329,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_TableSize: 64
   m_MipLevelLimit: 10
+  m_LookupTexture: {fileID: 0}
 --- !u!114 &1031306892
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -341,6 +342,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 834337c6c120e5a4d8b1c6d4cbf8223c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TileGenerator: {fileID: 4800000, guid: d16e752c96ecbd84eadcc8f7c07855ac, type: 3}
+  DemoTerrain: {fileID: 1818620059}
 --- !u!114 &1031306893
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -354,13 +357,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Name: 
-  m_EditorClassIdentifier: 
   m_Name: 
-  m_EditorClassIdentifier: 
   m_Name: 
-  m_EditorClassIdentifier: 
   m_Name: 
-  m_EditorClassIdentifier: 
   TileIndex: {x: 0, y: 0}
   ActiveFrame: 0
 --- !u!114 &1031306894
