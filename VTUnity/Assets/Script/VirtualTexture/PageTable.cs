@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Runtime.Serialization.Json;
 using System.Transactions;
 using UnityEngine;
+using UnityEngine.Experimental.U2D;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using UnityEngine.WSA;
@@ -44,7 +45,7 @@ namespace VirtualTexture
         private int quadRootKey = default;
 
         //indirection texture 到 physical texture 的 mapping
-        public Dictionary<int, PhysicalTileInfo> m_AddressMapping = default;
+        public Dictionary<int, PhysicalTileInfo> AddressMapping = default;
 
 
         void Start()
@@ -60,10 +61,21 @@ namespace VirtualTexture
             physicalTiles = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             feedBack = (Feedback)GetComponent(typeof(Feedback));
 
+            AddressMapping = new Dictionary<int, PhysicalTileInfo>();
+
             feedBack.OnFeedbackReadComplete += ProcessFeedback;
+            /**
             int key = getKey(2, 3, 5);
             int length = mipRectLengthFromKey(key);
             print(length);
+            
+            PhysicalTileInfo testtile = new PhysicalTileInfo();
+            testtile.ActiveFrame = 20;
+            AddressMapping[-1] = testtile;
+            AddressMapping[-1].ActiveFrame = 22;
+            int testframe = AddressMapping[-1].ActiveFrame;
+            print(testframe);
+            **/
         }
 
         void Update()
@@ -79,32 +91,148 @@ namespace VirtualTexture
             //每一帧 我们将当前feedback texture中 还没有被开始生产的tile 扔入生产队列 并在 quadtree 中插入他的信息
 
             List<int> UniquePageList = new List<int>();
-            foreach(var color in texture.GetRawTextureData<Color32>())
+
+
+            int texWidth = texture.width;
+            int texheight = texture.height;
+            var textureData = texture.GetRawTextureData<Color32>();
+
+            print(texWidth);
+            print(texheight);
+            print(textureData.Length);
+
+            for (int i = 0; i < texWidth; i += 8)
             {
-                UseOrCreatePage(color.r, color.g, color.b, quadRootKey);
+                for(int j = 0; j < texheight; j += 8)
+                {
+                    int pixelIndex = j * texWidth + i;
+                    var color = textureData[pixelIndex];
+                    UseOrCreatePage(color.r, color.g, color.b);
+                }
             }
-
-
+            //Update after 
+            /**
+            foreach (var color in texture.GetRawTextureData<Color32>())
+            {
+                UseOrCreatePage(color.r, color.g, color.b);
+            }
+            **/
 
         }
 
         
+        //
+        private int UseOrCreatePage(int x, int y, int mip)
+        {
+            if(!Contains(x, y, quadRootKey))
+            {
 
-        private int UseOrCreatePage(int x, int y, int mip, int quadKey)
+                return -1;
+            }
+
+            if(mip > MaxMipLevel)
+            {
+                return -1;
+            }
+
+            int page = SearchPage(x, y, mip, quadRootKey);
+
+
+            //没有任何可用page 加载root
+            if(page == -1)
+            {
+                CreatePage(quadRootKey);
+            }//当前page mip大于要求的mip(quadtree 还没加载到那个深度) 我们暂时使用并显示当前page 并把他的child加入生成队列
+            else if(getMip(page) > mip)
+            {
+                int childQuadKey = getChild(x, y, page);
+                
+                if(childQuadKey == -1)
+                {
+                    return -1;
+                }
+                CreatePage(childQuadKey);
+            }//mip 符合要求 直接使用当前page
+            else
+            {
+                
+            }
+
+            
+            return page; 
+        }
+
+
+        //找到最深miplevel的可用quadtree page
+        private int SearchPage(int x, int y, int mip, int quadKey)
         {
             if(!Contains(x, y, quadKey))
             {
                 return -1;
             }
 
-            
-            
+            int targetMip = getMip(quadKey);
 
+
+            //找到指定深度
+            if(targetMip == mip)
+            {
+                if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
+                {
+                    return quadKey;
+                }
+                else
+                {
+                    return -1;
+                }
+            }//未到达指定深度
+            else if(targetMip < mip)
+            {
+                List<int> childs = getChilds(quadKey);
+                print("hahahah");
+                foreach(var child in childs)
+                {
+                    int page = SearchPage(x, y, mip, child);
+                    if(page != -1)
+                    {
+                        return page;
+                    }
+                }
+
+                if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
+                {
+                    return quadKey;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
             
+            return -1;
             
-            return 0; 
         }
 
+        public void CreatePage(int quadKey)
+        {
+            //不重复生成
+            if(AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.Loading)
+            {
+                return;
+            }
+
+            PhysicalTileInfo info = new PhysicalTileInfo();
+            info.tileStatus = TileStatus.Loading;
+
+            info.QuadKey = quadKey;
+
+            AddressMapping[quadKey] = info;
+
+            tileGenerator.GeneratePage(quadRootKey);
+        }
+
+
+        //提供的x y 值是否在提供的quadkey 范围内
         private bool Contains(int x, int y, int key)
         {
             Vector2Int pageXY = getPageXY(key);
@@ -117,7 +245,8 @@ namespace VirtualTexture
         }
 
 
-        //list里的顺序为
+
+        //返回一个四个方向上childs的quadkey的list
         private List<int> getChilds(int key)
         {
             int curr_mip = getMip(key);
@@ -131,10 +260,10 @@ namespace VirtualTexture
 
             int rectLength = TableSize / (1 << (curr_mip + 1));
             
-            int child1 = getKey(pageXY.x, pageXY.y, curr_mip + 1);
-            int child2 = getKey(pageXY.x + rectLength, pageXY.y, curr_mip + 1);
-            int child3 = getKey(pageXY.x, pageXY.y + rectLength, curr_mip + 1);
-            int child4 = getKey(pageXY.x + rectLength, pageXY.y + rectLength, curr_mip + 1);
+            int child1 = getKey(pageXY.x, pageXY.y, curr_mip - 1);
+            int child2 = getKey(pageXY.x + rectLength, pageXY.y, curr_mip - 1);
+            int child3 = getKey(pageXY.x, pageXY.y + rectLength, curr_mip - 1);
+            int child4 = getKey(pageXY.x + rectLength, pageXY.y + rectLength, curr_mip - 1);
 
             List<int> result = new List<int>();
 
@@ -145,6 +274,22 @@ namespace VirtualTexture
 
             return result;
         }
+
+        //返回包含x和y的下一级mip的child
+        private int getChild(int x, int y, int quadKey)
+        {
+            List<int> childs = getChilds(quadKey);
+            foreach(var child in childs)
+            {
+                if (Contains(x, y, child))
+                {
+                    return child;
+                }
+            }
+
+            return -1;
+        }
+
         // 用以生成 8 bits miplevel, 12 bits pageX, 12 bits pageY
         public int getKey(int pageX, int pageY, int mip)
         {
@@ -205,29 +350,6 @@ namespace VirtualTexture
             return x;
         }
 
-        /**
-        public void louzhengqiu(int n)
-        {
-            int
-        }
-
-        public void guojiaqi(int n, int[] input, int[] output)
-        {
-            if(n == 0)
-            {
-                for(int i = 0; i < result.Length; i++)
-                {
-                    print(result[i]);
-                }
-            }
-            else
-            {
-                for(int j = 0; j < n; j++)
-                {
-                    
-                }
-            }
-        }
-        **/
+        
     }
 }

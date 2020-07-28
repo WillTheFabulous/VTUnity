@@ -17,6 +17,8 @@ namespace VirtualTexture
 
         public int ActiveFrame;
 
+        public int QuadKey = default;
+
         public TileStatus tileStatus = TileStatus.Uninitialized;
        
     }

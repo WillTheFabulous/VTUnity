@@ -126,7 +126,8 @@ public class Feedback : MonoBehaviour
             return;
 
         // Readback
-        //TODO: DOWNSCALE THE TEXTURE?
+        //TODO: DOWNSCALE THE TEXTURE? 338847 pixels ??????????
+        
         var request = AsyncGPUReadback.Request(TargetTexture);
         m_ReadbackRequests.Enqueue(request);
 
