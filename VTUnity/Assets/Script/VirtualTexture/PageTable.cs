@@ -234,8 +234,8 @@ namespace VirtualTexture
             info.QuadKey = quadKey;
 
             AddressMapping[quadKey] = info;
-
-            tileGenerator.GeneratePage(quadKey);
+            Vector2Int pageXY = getPageXY(quadKey);  
+            tileGenerator.GeneratePage(pageXY.x, pageXY.y, getMip(quadKey));
         }
 
 

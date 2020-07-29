@@ -3,11 +3,21 @@
 
 
 float _PAGETABLESIZE;
-float _TILESIZE;
 float _MAXMIP;
+
+int _TILESIZE;
+int _PADDINGSIZE;
+int2 _PHYSICALTEXTURESIZE;
 
 
 sampler2D _LOOKUPTEX;
+
+
+sampler2D _PHYSICALTEXTURE0; //blended diffuse
+sampler2D _PHYSICALTEXTURE1; //blended normal
+sampler2D _PHYSICALTEXTURE2;
+sampler2D _PHYSICALTEXTURE3;
+
 
 
 struct appData

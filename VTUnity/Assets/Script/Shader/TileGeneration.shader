@@ -1,4 +1,4 @@
-﻿Shader "Custom/TileGeneration"
+﻿Shader "VirtualTexture/TileGeneration"
 {
     Properties
     {
@@ -8,9 +8,13 @@
         _Metallic ("Metallic", Range(0,1)) = 0.0
 
 
+        _Diffuse0("Diffuse_0", 2D) = "white" {}
         _Diffuse1("Diffuse_1", 2D) = "white" {}
-        _Diffuse1("Diffuse_1", 2D) = "white" {}
-        _Diffuse1("Diffuse_1", 2D) = "white" {}
+        _Diffuse2("Diffuse_2", 2D) = "white" {}
+
+        _Normal0("Normal_0", 2D) = "bump" {}
+        _Normal1("Normal_1", 2D) = "bump" {}
+        _Normal2("Normal_2", 2D) = "bump" {}
 
 
     }
@@ -22,9 +26,10 @@
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
         #pragma surface surf Standard fullforwardshadows
-
+        
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
+        #include "VirtualTextureCommon.cginc"
 
         sampler2D _MainTex;
 

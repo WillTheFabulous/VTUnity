@@ -344,6 +344,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TileGenerator: {fileID: 4800000, guid: d16e752c96ecbd84eadcc8f7c07855ac, type: 3}
   DemoTerrain: {fileID: 1818620059}
+  LayerCount: 0
 --- !u!114 &1031306893
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,12 +357,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d2a779c7c9ebc7439dc2d95892f1bee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Name: 
-  m_Name: 
-  m_Name: 
-  m_Name: 
-  TileIndex: {x: 0, y: 0}
-  ActiveFrame: 0
 --- !u!114 &1031306894
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -375,6 +370,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_PhysicalTextureSize: {x: 0, y: 0}
+  m_TileSize: 256
+  m_PaddingSize: 4
+  m_NumTextureType: 2
   testint: 0
 --- !u!1 &1818620057
 GameObject:
