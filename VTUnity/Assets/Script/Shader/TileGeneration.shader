@@ -8,19 +8,21 @@
         _Metallic ("Metallic", Range(0,1)) = 0.0
 
 
-        _Diffuse0("Diffuse_0", 2D) = "white" {}
-        _Diffuse1("Diffuse_1", 2D) = "white" {}
-        _Diffuse2("Diffuse_2", 2D) = "white" {}
+        _Diffuse0("Diffuse_0", 2D) = "black" {}
+        _Diffuse1("Diffuse_1", 2D) = "black" {}
+        _Diffuse2("Diffuse_2", 2D) = "black" {}
 
         _Normal0("Normal_0", 2D) = "bump" {}
         _Normal1("Normal_1", 2D) = "bump" {}
         _Normal2("Normal_2", 2D) = "bump" {}
 
+        _AlphaMap("AlphaMap",2D) = "black" {}
+
 
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "VirtualTextureType"="Normal" }
         LOD 200
 
         CGPROGRAM

@@ -328,7 +328,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_TableSize: 64
-  m_MipLevelLimit: 10
+  m_MipLevelLimit: 6
   m_LookupTexture: {fileID: 0}
 --- !u!114 &1031306892
 MonoBehaviour:

@@ -12,6 +12,8 @@ namespace VirtualTexture
         [SerializeField]
         private Vector2Int m_PhysicalTextureSize = new Vector2Int(5, 7);
 
+        public Vector2Int PhysicalTextureSize { get { return m_PhysicalTextureSize; } }
+
         [SerializeField]
         private int m_TileSize = 256;
 
@@ -25,9 +27,6 @@ namespace VirtualTexture
         public RenderTexture[] PhysicalTextures { get; private set; }
 
         
-
-
-        public int testint = 0;
         void Start()
         {
             PhysicalTextures = new RenderTexture[m_NumTextureType]; 
@@ -44,17 +43,13 @@ namespace VirtualTexture
             Shader.SetGlobalVector("_PHYSICALTEXTURESIZE", new Vector2(m_PhysicalTextureSize.x, m_PhysicalTextureSize.y));
 
         }
-
+        
         // Update is called once per frame
         void Update()
         {
 
         }
 
-        public int testtest(int i)
-        {
-            testint = i + 1;
-            return testint;
-        }
+   
     }
 }

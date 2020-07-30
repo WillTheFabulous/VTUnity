@@ -56,6 +56,7 @@
      <Compile Include="Assets\Script\VirtualTexture\Feedback.cs" />
      <Compile Include="Assets\Script\VirtualTexture\FeedbackReader.cs" />
      <Compile Include="Assets\Script\VirtualTexture\LruCache.cs" />
+     <Compile Include="Assets\Script\VirtualTexture\MortonUtility.cs" />
      <Compile Include="Assets\Script\VirtualTexture\PageTable.cs" />
      <Compile Include="Assets\Script\VirtualTexture\PhysicalTexture.cs" />
      <Compile Include="Assets\Script\VirtualTexture\PhysicalTileInfo.cs" />

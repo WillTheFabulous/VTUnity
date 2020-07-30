@@ -26,6 +26,7 @@ namespace VirtualTexture
         [SerializeField]
         private int m_MipLevelLimit = default;
 
+        [SerializeField]
         public int MaxMipLevel { get { return Mathf.Min(m_MipLevelLimit, (int)Mathf.Log(TableSize, 2)); } }
 
         //GPU 端使用的页表查询贴图
@@ -50,7 +51,7 @@ namespace VirtualTexture
 
         void Start()
         {
-            quadRootKey = getKey(0, 0, m_MipLevelLimit);
+            quadRootKey = getKey(0, 0, MaxMipLevel);
 
             m_LookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false);
 
@@ -171,18 +172,18 @@ namespace VirtualTexture
 
 
         //找到最深miplevel的可用quadtree page
-        private int SearchPage(int x, int y, int mip, int quadKey)
+        private int SearchPage(int x, int y, int targetMip, int quadKey)
         {
             if(!Contains(x, y, quadKey))
             {
                 return -1;
             }
 
-            int targetMip = getMip(quadKey);
+            int currMip = getMip(quadKey);
 
 
             //找到指定深度
-            if(targetMip == mip)
+            if(targetMip == currMip)
             {
                 if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
                 {
@@ -193,13 +194,17 @@ namespace VirtualTexture
                     return -1;
                 }
             }//未到达指定深度
-            else if(targetMip < mip)
+            else if(targetMip < currMip)
             {
                 List<int> childs = getChilds(quadKey);
-                print("hahahah");
+
+                if(childs == null)
+                {
+                    return -1;
+                }
                 foreach(var child in childs)
                 {
-                    int page = SearchPage(x, y, mip, child);
+                    int page = SearchPage(x, y, targetMip, child);
                     if(page != -1)
                     {
                         return page;
@@ -235,7 +240,7 @@ namespace VirtualTexture
 
             AddressMapping[quadKey] = info;
             Vector2Int pageXY = getPageXY(quadKey);  
-            tileGenerator.GeneratePage(pageXY.x, pageXY.y, getMip(quadKey));
+            tileGenerator.GeneratePageTask(quadKey);
         }
 
 
@@ -258,7 +263,7 @@ namespace VirtualTexture
         {
             int curr_mip = getMip(key);
 
-            if(curr_mip == MaxMipLevel)
+            if(curr_mip == 0)
             {
                 return null;
             }
