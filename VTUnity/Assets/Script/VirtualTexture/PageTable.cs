@@ -21,13 +21,8 @@ namespace VirtualTexture
 
         public int TableSize { get { return m_TableSize; } }
 
-
-
         [SerializeField]
-        private int m_MipLevelLimit = default;
-
-        [SerializeField]
-        public int MaxMipLevel { get { return Mathf.Min(m_MipLevelLimit, (int)Mathf.Log(TableSize, 2)); } }
+        public int MaxMipLevel { get { return (int)Mathf.Log(TableSize, 2); } }
 
         //GPU 端使用的页表查询贴图
         [SerializeField]
@@ -46,7 +41,7 @@ namespace VirtualTexture
         private int quadRootKey = default;
 
         //indirection texture 到 physical texture 的 mapping
-        public Dictionary<int, PhysicalTileInfo> AddressMapping = default;
+        public Dictionary<int, PhysicalTileInfo> AddressMapping { get; set; }
 
 
         void Start()
@@ -64,24 +59,31 @@ namespace VirtualTexture
 
             AddressMapping = new Dictionary<int, PhysicalTileInfo>();
 
-            feedBack.OnFeedbackReadComplete += ProcessFeedback;
-            /**
-            int key = getKey(2, 3, 5);
-            int length = mipRectLengthFromKey(key);
-            print(length);
+            //feedBack.OnFeedbackReadComplete += ProcessFeedback;
+            tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
+
             
-            PhysicalTileInfo testtile = new PhysicalTileInfo();
-            testtile.ActiveFrame = 20;
-            AddressMapping[-1] = testtile;
-            AddressMapping[-1].ActiveFrame = 22;
-            int testframe = AddressMapping[-1].ActiveFrame;
-            print(testframe);
-            **/
+            
+
+            //CreatePage(quadRootKey);
         }
 
         void Update()
         {
-
+            if(Time.frameCount == 1)
+            {
+                CreatePage(quadRootKey);
+                List<int> childs = getChilds(quadRootKey);
+                foreach (var child in childs)
+                {
+                    CreatePage(child);
+                    List<int> childchilds = getChilds(child);
+                    foreach (var childchild in childchilds)
+                    {
+                        CreatePage(childchild);
+                    }
+                }
+            }
         }
 
         private void ProcessFeedback(Texture2D texture)
@@ -109,7 +111,11 @@ namespace VirtualTexture
                 {
                     int pixelIndex = j * texWidth + i;
                     var color = textureData[pixelIndex];
-                    UseOrCreatePage(color.r, color.g, color.b);
+                    //跳过白色背景
+                    if (color.b != 255)
+                    {
+                        UseOrCreatePage(color.r, color.g, color.b);
+                    }
                 }
             }
             //Update after DownScale is implemented
@@ -133,15 +139,14 @@ namespace VirtualTexture
         {
             if(!Contains(x, y, quadRootKey))
             {
-
                 return -1;
             }
-
             if(mip > MaxMipLevel)
             {
-                return -1;
+                mip = MaxMipLevel;
             }
-
+            
+            //找到最深miplevel的可用quadtree page
             int page = SearchPage(x, y, mip, quadRootKey);
 
 
@@ -153,6 +158,7 @@ namespace VirtualTexture
             else if(getMip(page) > mip)
             {
                 AddressMapping[page].ActiveFrame = Time.frameCount;
+                tileGenerator.SetActive(AddressMapping[page].TileIndex);
 
                 int childQuadKey = getChild(x, y, page);
                 
@@ -243,12 +249,21 @@ namespace VirtualTexture
             tileGenerator.GeneratePageTask(quadKey);
         }
 
+        public void OnGenerationComplete(List<int> quadKeys)
+        {
+            foreach(var quadKey in quadKeys)
+            {
+                AddressMapping[quadKey].tileStatus = TileStatus.LoadingComplete;
+            }
+        }
+
 
         //提供的x y 值是否在提供的quadkey 范围内
         private bool Contains(int x, int y, int key)
         {
             Vector2Int pageXY = getPageXY(key);
             int rectLength = mipRectLengthFromKey(key);
+
             if(pageXY.x <= x && pageXY.y <= y && (pageXY.x + rectLength) > x && (pageXY.y + rectLength) > y)
             {
                 return true;
@@ -270,7 +285,7 @@ namespace VirtualTexture
             
             Vector2Int pageXY = getPageXY(key);
 
-            int rectLength = TableSize / (1 << (curr_mip + 1));
+            int rectLength = mipRectLengthFromMip(curr_mip - 1);
             
             int child1 = getKey(pageXY.x, pageXY.y, curr_mip - 1);
             int child2 = getKey(pageXY.x + rectLength, pageXY.y, curr_mip - 1);
@@ -338,7 +353,7 @@ namespace VirtualTexture
 
         public int mipRectLengthFromMip(int mip)
         {
-            return TableSize / (int)Math.Pow(2, mip);
+            return TableSize / (int)Math.Pow(2, MaxMipLevel -  mip);
         }
 
         /** Spreads bits to every other. */

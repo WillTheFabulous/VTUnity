@@ -55,6 +55,7 @@
   <ItemGroup>
      <Compile Include="Assets\Script\Editor\EditorBase.cs" />
      <Compile Include="Assets\Script\Editor\FeedbackEditor.cs" />
+     <Compile Include="Assets\Script\Editor\PhysicalTextureEditor.cs" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>D:/VTUnity/VTUnity/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
  </Reference>

@@ -2,12 +2,6 @@
 {
     Properties
     {
-        _Color ("Color", Color) = (1,1,1,1)
-        _MainTex ("Albedo (RGB)", 2D) = "white" {}
-        _Glossiness ("Smoothness", Range(0,1)) = 0.5
-        _Metallic ("Metallic", Range(0,1)) = 0.0
-
-
         _Diffuse0("Diffuse_0", 2D) = "black" {}
         _Diffuse1("Diffuse_1", 2D) = "black" {}
         _Diffuse2("Diffuse_2", 2D) = "black" {}
@@ -23,45 +17,48 @@
     SubShader
     {
         Tags { "VirtualTextureType"="Normal" }
-        LOD 200
-
-        CGPROGRAM
-        // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows
+        Cull Off ZWrite Off ZTest Always
+ 
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex vertDraw
+            #pragma fragment frag
+            #pragma target 5.0
+      
+            #include "VirtualTextureCommon.cginc"
+            #include "UnityCG.cginc"
         
-        // Use shader model 3.0 target, to get nicer looking lighting
-        #pragma target 3.0
-        #include "VirtualTextureCommon.cginc"
+            UNITY_DECLARE_TEX2D(_Diffuse0);
+            UNITY_DECLARE_TEX2D_NOSAMPLER(_Diffuse1);
 
-        sampler2D _MainTex;
+            UNITY_DECLARE_TEX2D(_AlphaMap);
 
-        struct Input
-        {
-            float2 uv_MainTex;
-        };
 
-        half _Glossiness;
-        half _Metallic;
-        fixed4 _Color;
+            v2f_img vertDraw(appData v){
+                v2f_img o;
+                UNITY_INITIALIZE_OUTPUT(v2f_img, o);
+                o.pos = v.vertex;
+                //o.pos.w = 1.0;
+                o.uv = v.texcoord;
+                return o;
+            };
+        
+            fixed4 frag(v2f_img i) : SV_Target
+            {
+                float4 alpha = UNITY_SAMPLE_TEX2D(_AlphaMap, i.uv);
 
-        // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-        // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-        // #pragma instancing_options assumeuniformscaling
-        UNITY_INSTANCING_BUFFER_START(Props)
-            // put more per-instance properties here
-        UNITY_INSTANCING_BUFFER_END(Props)
+                float4 diffuse0 = UNITY_SAMPLE_TEX2D(_Diffuse0, i.uv);
+                float4 diffuse1 = UNITY_SAMPLE_TEX2D_SAMPLER(_Diffuse1, _Diffuse0, i.uv);
 
-        void surf (Input IN, inout SurfaceOutputStandard o)
-        {
-            // Albedo comes from a texture tinted by color
-            fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
-            o.Albedo = c.rgb;
-            // Metallic and smoothness come from slider variables
-            o.Metallic = _Metallic;
-            o.Smoothness = _Glossiness;
-            o.Alpha = c.a;
+                fixed4 result = alpha.r * diffuse0 + alpha.g * diffuse1;
+                //return result;
+                return fixed4(1.0,1.0,1.0,1.0);
+            }
+
+
+            ENDCG
         }
-        ENDCG
     }
-    FallBack "Diffuse"
+    
 }

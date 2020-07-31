@@ -5,17 +5,20 @@ using System.Runtime.ExceptionServices;
 using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-
+using UnityEngine.Rendering;
+using UnityEngine.UI;
+using System.Dynamic;
 
 namespace VirtualTexture
 {
     public class TileGeneration : MonoBehaviour
     {
+        public event Action<List<int>> OnTileGenerationComplete;
         // Start is called before the first frame update
         [SerializeField]
         private Shader TileGenerator = default;
 
-        private Queue<int> TilesToGenerate = default;
+        private List<int> TilesToGenerate = default;
 
         private List<int> GeneratingTiles = default;
 
@@ -31,20 +34,19 @@ namespace VirtualTexture
 
         private PageTable pageTable = default;
 
-        private Mesh m_Quads;
+        private Mesh mQuads;
 
-        private LruCache m_TilePool;
+        private LruCache m_TilePool = new LruCache();
 
 
         void Start()
         {
-            TilesToGenerate = new Queue<int>();
+            TilesToGenerate = new List<int>();
             TileGeneratorMat = new Material(TileGenerator);
             LayerCount = DemoTerrain.terrainData.terrainLayers.Length;
 
             physicalTexture = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             pageTable = (PageTable)GetComponent(typeof(PageTable));
-            TilesToGenerate = new Queue<int>();
 
             for (int i = 0; i < physicalTexture.PhysicalTextureSize.x * physicalTexture.PhysicalTextureSize.y; i++)
             {
@@ -66,14 +68,12 @@ namespace VirtualTexture
         {
             if (!TilesToGenerate.Contains(quadKey))
             {
-                TilesToGenerate.Enqueue(quadKey);
+                TilesToGenerate.Add(quadKey);
             }
         }
 
         public void GeneratePage()
         {
-            
-
             /**
 
             mRenderTextureMaterials[terrainIndex].SetVector("_Tile_ST", tileST);
@@ -102,12 +102,7 @@ namespace VirtualTexture
                 tempCB.DrawMeshInstanced(mQuad, 0, mDecalMaterial, 0, pageMipLevelTable[mipLevel].chunks[chunkIndex].decalMatrixList.ToArray());
             }
 
-            Graphics.ExecuteCommandBuffer(tempCB);//DEBUG\
-
-
-
-
-           
+            Graphics.ExecuteCommandBuffer(tempCB);/
 
              **/
             /**
@@ -121,19 +116,34 @@ namespace VirtualTexture
                 meshCount++;
             }
             **/
+            
             if(TilesToGenerate.Count == 0)
             {
                 return;
             }
 
-            //TODO 做成一次贴三个的
             List<int> TilesForMesh = new List<int>();
-            
-            int quadKey = TilesToGenerate.Peek();
-            
-            TilesForMesh.Add(quadKey);
 
+            // 优先处理mipmap等级高的tile
+            TilesToGenerate.Sort((x,y) => { return MortonUtility.getMip(x).CompareTo(MortonUtility.getMip(y)); });
+
+            int quadKey = TilesToGenerate[TilesToGenerate.Count - 1];
+            //print("creating " + MortonUtility.getMip(quadKey));
+            TilesToGenerate.RemoveAt(TilesToGenerate.Count - 1);
+
+            //TODO 做成一次贴三个的
+            TilesForMesh.Add(quadKey);
             SetUpMesh(TilesForMesh);
+
+            RenderBuffer[] colorBuffers = new RenderBuffer[1];
+            colorBuffers[0] = physicalTexture.PhysicalTextures[0].colorBuffer;
+            RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[0].depthBuffer;
+            Graphics.SetRenderTarget(colorBuffers, depthBuffer);
+            CommandBuffer tempCB = new CommandBuffer();
+            tempCB.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
+            Graphics.ExecuteCommandBuffer(tempCB);
+
+            OnTileGenerationComplete?.Invoke(TilesForMesh);
 
 
         }
@@ -146,6 +156,7 @@ namespace VirtualTexture
             int tableSize = pageTable.TableSize;
             //有可能出现的最高mip
             int maxMip = (int)Math.Log(tableSize, 2);
+            mQuads = new Mesh();
             
             for(int i = 0; i < quadKeys.Count; i++)
             {
@@ -156,29 +167,73 @@ namespace VirtualTexture
                 int mipBias = maxMip - mip;
                 float rectBaseLength = 1.0f / (float)tableSize;
                 float currMipRectLength = 1.0f / (float)Math.Pow(2.0, mipBias);
+
                 //TODO????? padding 采图？？
                 quadUVList.Add(new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength));
                 quadUVList.Add(new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength + currMipRectLength));
                 quadUVList.Add(new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength, (float)pageXY.y * rectBaseLength + currMipRectLength));
                 quadUVList.Add(new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength + currMipRectLength));
-                //Calculate screen space tile width and height
 
-                float tileBaseWidth = 1.0f / (float)physicalTexture.PhysicalTextureSize.x;
-                float tileBaseHeight = 1.0f / (float)physicalTexture.PhysicalTextureSize.y;
-                /**
-                Pixel.x = (NDC.x + 1) * Width / 2
-                Pixel.y = (1 − NDC.y) *Height / 2
-                */
+
+                float Width = (float)physicalTexture.PhysicalTextureSize.x;
+                float Height = (float)physicalTexture.PhysicalTextureSize.y;
+
+                float physicalWidth = (float)physicalTexture.PhysicalTextures[0].width;
+                float physicalHeight = (float)physicalTexture.PhysicalTextures[0].height;
+
                 Vector2Int tile = RequestTile();
-                //quadVertexList.Add(new Vector3)
+                SetActive(tile);
 
+
+                /**
+                quadVertexList.Add(new Vector3(tile.x * 2 / Width - 1, tile.y * 2 / Height, 0.1f));
+                quadVertexList.Add(new Vector3((tile.x + 1) * 2 / Width - 1, tile.y * 2 / Height, 0.1f));
+                quadVertexList.Add(new Vector3((tile.x + 1) * 2 / Width - 1, (tile.y + 1) * 2 / Height, 0.1f));
+                quadVertexList.Add(new Vector3(tile.x * 2 / Width - 1, (tile.y + 1) * 2 / Height, 0.1f));
+                **/
                 
+                quadVertexList.Add(new Vector3((tile.x * 2.0f / Width - 1.0f) * physicalWidth, (tile.y * 2.0f / Height) * physicalHeight, 0.1f));
+                quadVertexList.Add(new Vector3(((tile.x + 1.0f) * 2.0f / Width - 1.0f) * physicalWidth, (tile.y * 2.0f / Height) * physicalHeight, 0.1f));
+
+                quadVertexList.Add(new Vector3(((tile.x + 1.0f) * 2.0f / Width - 1.0f) * physicalWidth, ((tile.y + 1.0f) * 2.0f / Height) * physicalHeight, 0.1f));
+                quadVertexList.Add(new Vector3((tile.x * 2.0f / Width - 1.0f) * physicalWidth, ((tile.y + 1.0f) * 2.0f / Height) * physicalHeight, 0.1f));
                 
+
+
+                quadTriangleList.Add(4 * i);
+                quadTriangleList.Add(4 * i + 1);
+                quadTriangleList.Add(4 * i + 2);
+
+                quadTriangleList.Add(4 * i + 2);
+                quadTriangleList.Add(4 * i + 3);
+                quadTriangleList.Add(4 * i);
+
+                //Mapping Processsssss
+                pageTable.AddressMapping[quadKey].TileIndex = tile;
+
+                int oldQuad;
+                if(physicalTexture.TileToQuadMapping.TryGetValue(tile,out oldQuad))
+                {
+                    pageTable.AddressMapping.Remove(oldQuad);
+                }
+                physicalTexture.TileToQuadMapping[tile] = quadKey;
+
             }
-           
+
+            mQuads.SetVertices(quadVertexList);
+            mQuads.SetUVs(0, quadUVList);
+            mQuads.SetTriangles(quadTriangleList, 0);
+
         }
 
-        private 
+        public bool SetActive(Vector2Int tile)
+        {
+            bool success = m_TilePool.SetActive(PosToId(tile));
+
+            return success;
+        }
+
+
         public Vector2Int RequestTile()
         {
             return IdToPos(m_TilePool.First);
