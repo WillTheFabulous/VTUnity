@@ -74,48 +74,7 @@ namespace VirtualTexture
 
         public void GeneratePage()
         {
-            /**
 
-            mRenderTextureMaterials[terrainIndex].SetVector("_Tile_ST", tileST);
-            
-            RenderBuffer[] colorBuffers = new RenderBuffer[2];
-            RenderBuffer depthBuffer = textureArrayArray[mipLevel].depthBuffer;
-            colorBuffers[0] = textureArrayArray[mipLevel].colorBuffer;
-            colorBuffers[1] = normalArrayArray[mipLevel].colorBuffer;
-            RenderTargetSetup rts = new RenderTargetSetup(colorBuffers, depthBuffer, 0, CubemapFace.Unknown);
-            rts.depthSlice = tileNode.Value.tileIndex;
-            Graphics.SetRenderTarget(rts);//DEBUG
-
-            //We are using command buffer here to bypass the problem that the regular DrawMeshInstanced must 
-            //be used with a camera and SetRenderTarget doesn't affect it.
-            //We are not using command buffer for performance, because creating command buffer every frame 
-            //will not make the rendering faster. However we need to change the command every frame, since
-            //the matrix list is not guairanteed to remain same every time. 
-            //So we are creating command buffer just to use CommandBuffer.DrawMeshInstanced.
-            CommandBuffer tempCB = new CommandBuffer();
-            tempCB.ClearRenderTarget(true, true, Color.black, 1);
-            tempCB.DrawMesh(mQuad, Matrix4x4.identity, mRenderTextureMaterials[terrainIndex]);
-
-            if (pageMipLevelTable[mipLevel].chunks[chunkIndex].decalMatrixList.Count > 0)
-            {
-                //Set Graphics Instance Variants to Keep All if this draw call doesn't work
-                tempCB.DrawMeshInstanced(mQuad, 0, mDecalMaterial, 0, pageMipLevelTable[mipLevel].chunks[chunkIndex].decalMatrixList.ToArray());
-            }
-
-            Graphics.ExecuteCommandBuffer(tempCB);/
-
-             **/
-            /**
-            int meshCount = 0;
-            while(meshCount < 3 && TilesToGenerate.Count > 0)
-            {
-                int quadKey 
-
-
-
-                meshCount++;
-            }
-            **/
             
             if(TilesToGenerate.Count == 0)
             {
@@ -127,12 +86,13 @@ namespace VirtualTexture
             // 优先处理mipmap等级高的tile
             TilesToGenerate.Sort((x,y) => { return MortonUtility.getMip(x).CompareTo(MortonUtility.getMip(y)); });
 
-            int quadKey = TilesToGenerate[TilesToGenerate.Count - 1];
-            //print("creating " + MortonUtility.getMip(quadKey));
-            TilesToGenerate.RemoveAt(TilesToGenerate.Count - 1);
-
-            //TODO 做成一次贴三个的
-            TilesForMesh.Add(quadKey);
+            //一次最多贴5个
+            for (int i = 0; i < 5 && TilesToGenerate.Count > 0; i++)
+            {
+                int quadKey = TilesToGenerate[TilesToGenerate.Count - 1];
+                TilesToGenerate.RemoveAt(TilesToGenerate.Count - 1);
+                TilesForMesh.Add(quadKey);
+            }
             SetUpMesh(TilesForMesh);
 
             RenderBuffer[] colorBuffers = new RenderBuffer[1];
@@ -142,6 +102,7 @@ namespace VirtualTexture
             CommandBuffer tempCB = new CommandBuffer();
             tempCB.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
             Graphics.ExecuteCommandBuffer(tempCB);
+
 
             OnTileGenerationComplete?.Invoke(TilesForMesh);
 
@@ -168,38 +129,36 @@ namespace VirtualTexture
                 float rectBaseLength = 1.0f / (float)tableSize;
                 float currMipRectLength = 1.0f / (float)Math.Pow(2.0, mipBias);
 
+                Vector3 uv0 = new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength);
+                Vector3 uv1 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength, (float)pageXY.y * rectBaseLength);
+                Vector3 uv2 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength, (float)pageXY.y * rectBaseLength + currMipRectLength);
+                Vector3 uv3 = new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength + currMipRectLength);
+                
+
+                quadUVList.Add(uv0);
+                quadUVList.Add(uv1);
+                quadUVList.Add(uv2);
+                quadUVList.Add(uv3);
+
                 //TODO????? padding 采图？？
-                quadUVList.Add(new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength));
-                quadUVList.Add(new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength + currMipRectLength));
-                quadUVList.Add(new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength, (float)pageXY.y * rectBaseLength + currMipRectLength));
-                quadUVList.Add(new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength + currMipRectLength));
 
 
                 float Width = (float)physicalTexture.PhysicalTextureSize.x;
                 float Height = (float)physicalTexture.PhysicalTextureSize.y;
 
-                float physicalWidth = (float)physicalTexture.PhysicalTextures[0].width;
-                float physicalHeight = (float)physicalTexture.PhysicalTextures[0].height;
-
                 Vector2Int tile = RequestTile();
-                SetActive(tile);
-
-
-                /**
-                quadVertexList.Add(new Vector3(tile.x * 2 / Width - 1, tile.y * 2 / Height, 0.1f));
-                quadVertexList.Add(new Vector3((tile.x + 1) * 2 / Width - 1, tile.y * 2 / Height, 0.1f));
-                quadVertexList.Add(new Vector3((tile.x + 1) * 2 / Width - 1, (tile.y + 1) * 2 / Height, 0.1f));
-                quadVertexList.Add(new Vector3(tile.x * 2 / Width - 1, (tile.y + 1) * 2 / Height, 0.1f));
-                **/
+                SetActive(tile);     
                 
-                quadVertexList.Add(new Vector3((tile.x * 2.0f / Width - 1.0f) * physicalWidth, (tile.y * 2.0f / Height) * physicalHeight, 0.1f));
-                quadVertexList.Add(new Vector3(((tile.x + 1.0f) * 2.0f / Width - 1.0f) * physicalWidth, (tile.y * 2.0f / Height) * physicalHeight, 0.1f));
+                Vector3 vertex0 = new Vector3(tile.x * 2 / Width - 1, tile.y * 2 / Height - 1, 0.1f);
+                Vector3 vertex1 = new Vector3((tile.x + 1) * 2 / Width - 1, tile.y * 2 / Height - 1, 0.1f);
+                Vector3 vertex2 = new Vector3((tile.x + 1) * 2 / Width - 1, (tile.y + 1) * 2 / Height - 1, 0.1f);
+                Vector3 vertex3 = new Vector3(tile.x * 2 / Width - 1, (tile.y + 1) * 2 / Height - 1 , 0.1f);
 
-                quadVertexList.Add(new Vector3(((tile.x + 1.0f) * 2.0f / Width - 1.0f) * physicalWidth, ((tile.y + 1.0f) * 2.0f / Height) * physicalHeight, 0.1f));
-                quadVertexList.Add(new Vector3((tile.x * 2.0f / Width - 1.0f) * physicalWidth, ((tile.y + 1.0f) * 2.0f / Height) * physicalHeight, 0.1f));
-                
-
-
+                quadVertexList.Add(vertex0);
+                quadVertexList.Add(vertex1);
+                quadVertexList.Add(vertex2);
+                quadVertexList.Add(vertex3);
+           
                 quadTriangleList.Add(4 * i);
                 quadTriangleList.Add(4 * i + 1);
                 quadTriangleList.Add(4 * i + 2);

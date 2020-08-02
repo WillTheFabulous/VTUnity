@@ -11,11 +11,14 @@ namespace VirtualTexture
         // Start is called before the first frame update
         protected override void OnPlayingInspectorGUI()
         {
+            
             var renderer = (PhysicalTexture)target;
+
             foreach (var texture in renderer.PhysicalTextures)
             {
                 DrawTexture(texture, "Physical Texture");
             }
+    
         }
     }
 }

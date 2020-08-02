@@ -59,20 +59,18 @@ namespace VirtualTexture
 
             AddressMapping = new Dictionary<int, PhysicalTileInfo>();
 
-            //feedBack.OnFeedbackReadComplete += ProcessFeedback;
+            feedBack.OnFeedbackReadComplete += ProcessFeedback;
             tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
-
             
-            
-
-            //CreatePage(quadRootKey);
         }
 
         void Update()
         {
-            if(Time.frameCount == 1)
+            /**
+            if(Time.frameCount == 2)
             {
                 CreatePage(quadRootKey);
+                
                 List<int> childs = getChilds(quadRootKey);
                 foreach (var child in childs)
                 {
@@ -83,7 +81,11 @@ namespace VirtualTexture
                         CreatePage(childchild);
                     }
                 }
+                
+
             }
+            **/
+
         }
 
         private void ProcessFeedback(Texture2D texture)
@@ -100,34 +102,48 @@ namespace VirtualTexture
             int texheight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
 
+            int count = 0;
             /**
-            print(texWidth);
-            print(texheight);
-            print(textureData.Length);
-            **/
-            for (int i = 0; i < texWidth; i += 8)
+            for (int i = 0; i < texWidth; i += 12)
             {
-                for(int j = 0; j < texheight; j += 8)
+                for(int j = 0; j < texheight; j += 12)
                 {
                     int pixelIndex = j * texWidth + i;
                     var color = textureData[pixelIndex];
                     //跳过白色背景
+                    //count++;
                     if (color.b != 255)
                     {
+                        
                         UseOrCreatePage(color.r, color.g, color.b);
                     }
                 }
             }
+            */
+            //print(count);
+
             //Update after DownScale is implemented
-            /**
+            
             foreach (var color in texture.GetRawTextureData<Color32>())
             {
-                UseOrCreatePage(color.r, color.g, color.b);
+                if (color.b != 255)
+                    {
+                        
+                        UseOrCreatePage(color.r, color.g, color.b);
+                    }
             }
-            **/
-
-            foreach(var kv in AddressMapping)
+            
+            var pixels = m_LookupTexture.GetRawTextureData<Color32>();
+            var currentFrame = (byte)Time.frameCount;
+            foreach (var kv in AddressMapping)
             {
+                PhysicalTileInfo currMapping = kv.Value;
+                if(currMapping.ActiveFrame != Time.frameCount || currMapping.tileStatus != TileStatus.LoadingComplete)
+                {
+                    continue;
+                }
+
+                
                 
             }
 
@@ -187,9 +203,11 @@ namespace VirtualTexture
 
             int currMip = getMip(quadKey);
 
+            
+
 
             //找到指定深度
-            if(targetMip == currMip)
+            if (targetMip == currMip)
             {
                 if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
                 {
@@ -236,6 +254,8 @@ namespace VirtualTexture
             //不重复生成
             if(AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.Loading)
             {
+                //print("creaing");
+
                 return;
             }
 

@@ -52,8 +52,8 @@
                 float4 diffuse1 = UNITY_SAMPLE_TEX2D_SAMPLER(_Diffuse1, _Diffuse0, i.uv);
 
                 fixed4 result = alpha.r * diffuse0 + alpha.g * diffuse1;
-                //return result;
-                return fixed4(1.0,1.0,1.0,1.0);
+                return result;
+                //return fixed4(1.0,1.0,1.0,1.0);
             }
 
 
