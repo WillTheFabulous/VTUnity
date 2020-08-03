@@ -58,6 +58,8 @@ namespace VirtualTexture
             for (int i = 0; i < LayerCount; i++)
             {
                 TerrainLayer currLayer = DemoTerrain.terrainData.terrainLayers[i];
+                //currLayer.diffuseTexture.wrapMode = TextureWrapMode.Clamp;
+                //currLayer.normalMapTexture.wrapMode = TextureWrapMode.Clamp;
                 TileGeneratorMat.SetTexture("_Diffuse" + i, currLayer.diffuseTexture);
                 TileGeneratorMat.SetTexture("_Normal" + i, currLayer.normalMapTexture);
             }
@@ -128,11 +130,12 @@ namespace VirtualTexture
                 int mipBias = maxMip - mip;
                 float rectBaseLength = 1.0f / (float)tableSize;
                 float currMipRectLength = 1.0f / (float)Math.Pow(2.0, mipBias);
+                float paddingLength = rectBaseLength * (4.0f / 256.0f);
 
-                Vector3 uv0 = new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength);
-                Vector3 uv1 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength, (float)pageXY.y * rectBaseLength);
-                Vector3 uv2 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength, (float)pageXY.y * rectBaseLength + currMipRectLength);
-                Vector3 uv3 = new Vector2((float)pageXY.x * rectBaseLength, (float)pageXY.y * rectBaseLength + currMipRectLength);
+                Vector3 uv0 = new Vector2((float)pageXY.x * rectBaseLength - paddingLength, (float)pageXY.y * rectBaseLength - paddingLength);
+                Vector3 uv1 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength + paddingLength, (float)pageXY.y * rectBaseLength - paddingLength);
+                Vector3 uv2 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength + paddingLength, (float)pageXY.y * rectBaseLength + currMipRectLength + paddingLength);
+                Vector3 uv3 = new Vector2((float)pageXY.x * rectBaseLength - paddingLength, (float)pageXY.y * rectBaseLength + currMipRectLength + paddingLength);
                 
 
                 quadUVList.Add(uv0);
