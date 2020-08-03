@@ -61,7 +61,18 @@ namespace VirtualTexture
 
             feedBack.OnFeedbackReadComplete += ProcessFeedback;
             tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
-            
+
+            List<int> childs = getChilds(quadRootKey);
+            print(childs[3] - childs[2]);
+            print(childs[2] - childs[1]);
+            print(childs[1] - childs[0]);
+
+            List<int> childschilds = getChilds(childs[0]);
+            print(childschilds[3] - childschilds[2]);
+            print(childschilds[2] - childschilds[1]);
+            print(childschilds[1] - childschilds[0]);
+
+
         }
 
         void Update()
@@ -103,10 +114,10 @@ namespace VirtualTexture
             var textureData = texture.GetRawTextureData<Color32>();
 
             int count = 0;
-            /**
-            for (int i = 0; i < texWidth; i += 12)
+            
+            for (int i = 0; i < texWidth; i += 10)
             {
-                for(int j = 0; j < texheight; j += 12)
+                for(int j = 0; j < texheight; j += 10)
                 {
                     int pixelIndex = j * texWidth + i;
                     var color = textureData[pixelIndex];
@@ -119,11 +130,11 @@ namespace VirtualTexture
                     }
                 }
             }
-            */
+            
             //print(count);
 
             //Update after DownScale is implemented
-            
+            /**
             foreach (var color in texture.GetRawTextureData<Color32>())
             {
                 if (color.b != 255)
@@ -132,6 +143,7 @@ namespace VirtualTexture
                         UseOrCreatePage(color.r, color.g, color.b);
                     }
             }
+            **/
             
             var pixels = m_LookupTexture.GetRawTextureData<Color32>();
             var currentFrame = (byte)Time.frameCount;
@@ -202,11 +214,30 @@ namespace VirtualTexture
             }
 
             int currMip = getMip(quadKey);
+            if (currMip > targetMip)
+            {
+                List<int> childs = getChilds(quadKey);
+                foreach(var child in childs)
+                {
+                    int page = SearchPage(x, y, targetMip, child);
+                    if(page != -1)
+                    {
+                        return page;
+                    }
+                }
+            }
 
-            
 
-
+            if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
+            {
+                return quadKey;
+            }
+            else
+            {
+                return -1;
+            }
             //找到指定深度
+            /**
             if (targetMip == currMip)
             {
                 if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
@@ -246,7 +277,8 @@ namespace VirtualTexture
             }
             
             return -1;
-            
+            **/
+
         }
 
         public void CreatePage(int quadKey)
