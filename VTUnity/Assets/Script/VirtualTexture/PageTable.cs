@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.Serialization.Json;
 using System.Transactions;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.Experimental.U2D;
 using UnityEngine.Tilemaps;
@@ -62,15 +64,17 @@ namespace VirtualTexture
             feedBack.OnFeedbackReadComplete += ProcessFeedback;
             tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
 
+            /**
             List<int> childs = getChilds(quadRootKey);
-            print(childs[3] - childs[2]);
-            print(childs[2] - childs[1]);
-            print(childs[1] - childs[0]);
-
             List<int> childschilds = getChilds(childs[0]);
-            print(childschilds[3] - childschilds[2]);
-            print(childschilds[2] - childschilds[1]);
+            int child0 = quadRootKey - 0x1000000;
+            print(child0 == childs[0]);
+            print(getMip(child0));
+            print(childs[1] - childs[0]);
             print(childschilds[1] - childschilds[0]);
+
+            **/
+            //print(getMip(childs[0]) - getMip(childschilds[0]));
 
 
         }
@@ -113,8 +117,10 @@ namespace VirtualTexture
             int texheight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
 
-            int count = 0;
+
             
+            //Todo 多线程!!!!!!!!!!
+
             for (int i = 0; i < texWidth; i += 10)
             {
                 for(int j = 0; j < texheight; j += 10)
@@ -150,14 +156,27 @@ namespace VirtualTexture
             foreach (var kv in AddressMapping)
             {
                 PhysicalTileInfo currMapping = kv.Value;
+                
                 if(currMapping.ActiveFrame != Time.frameCount || currMapping.tileStatus != TileStatus.LoadingComplete)
                 {
                     continue;
                 }
+                int currMip = getMip(currMapping.QuadKey);
+                Vector2Int pageXY = getPageXY(currMapping.QuadKey);
+                int RectLength = mipRectLengthFromMip(currMip);
+                Color32 c = new Color32((byte)currMapping.TileIndex.x, (byte)currMapping.TileIndex.y, (byte)currMip, currentFrame);
 
-                
-                
+                for(int x = pageXY.x; x < pageXY.x + RectLength; x++)
+                {
+                    for(int y = pageXY.y; y < pageXY.y + RectLength; y++)
+                    {
+                        var id = y * TableSize + x;
+                        if (pixels[id].b > c.b || pixels[id].a != currentFrame)
+                            pixels[id] = c;
+                    }
+                }                
             }
+            m_LookupTexture.Apply(false);
 
         }
 
@@ -165,10 +184,7 @@ namespace VirtualTexture
         //
         private int UseOrCreatePage(int x, int y, int mip)
         {
-            if(!Contains(x, y, quadRootKey))
-            {
-                return -1;
-            }
+
             if(mip > MaxMipLevel)
             {
                 mip = MaxMipLevel;
@@ -286,8 +302,6 @@ namespace VirtualTexture
             //不重复生成
             if(AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.Loading)
             {
-                //print("creaing");
-
                 return;
             }
 
@@ -297,7 +311,6 @@ namespace VirtualTexture
             info.QuadKey = quadKey;
 
             AddressMapping[quadKey] = info;
-            Vector2Int pageXY = getPageXY(quadKey);  
             tileGenerator.GeneratePageTask(quadKey);
         }
 
@@ -334,7 +347,8 @@ namespace VirtualTexture
             {
                 return null;
             }
-            
+
+            /**
             Vector2Int pageXY = getPageXY(key);
 
             int rectLength = mipRectLengthFromMip(curr_mip - 1);
@@ -343,7 +357,13 @@ namespace VirtualTexture
             int child2 = getKey(pageXY.x + rectLength, pageXY.y, curr_mip - 1);
             int child3 = getKey(pageXY.x, pageXY.y + rectLength, curr_mip - 1);
             int child4 = getKey(pageXY.x + rectLength, pageXY.y + rectLength, curr_mip - 1);
-
+            **/
+            int delta = 1 << ((curr_mip - 1) * 2);
+            int child1 = key - 0x1000000;
+            int child2 = child1 + delta;
+            int child3 = child2 + delta;
+            int child4 = child3 + delta;
+            
             List<int> result = new List<int>();
 
             result.Add(child1);
