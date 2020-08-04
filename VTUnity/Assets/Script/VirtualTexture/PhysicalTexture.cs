@@ -40,7 +40,7 @@ namespace VirtualTexture
                 PhysicalTextures[i] = new RenderTexture(m_PhysicalTextureSize.x * (m_TileSize + m_PaddingSize), m_PhysicalTextureSize.y * (m_TileSize + m_PaddingSize), 0);
                 PhysicalTextures[i].useMipMap = false;
                 PhysicalTextures[i].wrapMode = TextureWrapMode.Clamp;
-                Shader.SetGlobalTexture("_PhysicalTexture" + i, PhysicalTextures[i]);
+                Shader.SetGlobalTexture("_PHYSICALTEXTURE" + i, PhysicalTextures[i]);
             }
 
             Shader.SetGlobalInt("_TILESIZE", m_TileSize);

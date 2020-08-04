@@ -10,17 +10,19 @@ Shader "VirtualTexture/Unlit"
 		Pass
 		{
 			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#include "UnityCG.cginc"
 			#include "VirtualTextureCommon.cginc"
+			#pragma vertex vert
+			#pragma fragment frag
+			
 			
 			fixed4 frag (v2f i) : SV_Target{
 
 				//COMPUTE PAGE TABLE POSITION
+				
 				float pageSizeInUV = 1.0 / _PAGETABLESIZE;
 
-				float2 pageTableUV = int(i.uv / pageSizeInUV) * pageSizeInUV;
+				float2 pageTableUV = int2(i.uv / pageSizeInUV) * pageSizeInUV;
 
 				//SAMPLE PAGE TABLE
 
@@ -36,9 +38,12 @@ Shader "VirtualTexture/Unlit"
 				//当前渲染的fragment在他所处的page中的比例
 				float2 pageRatio = frac(i.uv / mipRectLength);
 				//结合physicalBaseUV(已经算上padding)，算出我们在physical texture上应该采的点
-				//float2 finalSampleUV = physicalBaseUV + 
+				float2 finalSampleUV = physicalBaseUV + float2(_TILESIZE * pageRatio.x / float(physicalSize.x), _TILESIZE * pageRatio.y / float(physicalSize.y));
 				//SAMPLE PHYSICAL TEXTURE USING 
-				fixed4 col = fixed4(1,1,0,0);
+				fixed4 col = tex2D(_PHYSICALTEXTURE0, finalSampleUV);
+				/**
+				fixed4 col = fixed4(1, 1, 0, 0);
+				**/
 				return col;
 			}
 			ENDCG

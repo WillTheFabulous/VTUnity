@@ -63,6 +63,7 @@ namespace VirtualTexture
 
             feedBack.OnFeedbackReadComplete += ProcessFeedback;
             tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
+
             /**
             List<int> childs = getChilds(quadRootKey);
             List<int> childschilds = getChilds(childs[0]);
@@ -74,6 +75,7 @@ namespace VirtualTexture
 
             **/
             //print(getMip(childs[0]) - getMip(childschilds[0]));
+
 
         }
 
@@ -115,8 +117,10 @@ namespace VirtualTexture
             int texheight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
 
+
             
             //Todo 多线程!!!!!!!!!!
+
             for (int i = 0; i < texWidth; i += 10)
             {
                 for(int j = 0; j < texheight; j += 10)
@@ -226,11 +230,30 @@ namespace VirtualTexture
             }
 
             int currMip = getMip(quadKey);
+            if (currMip > targetMip)
+            {
+                List<int> childs = getChilds(quadKey);
+                foreach(var child in childs)
+                {
+                    int page = SearchPage(x, y, targetMip, child);
+                    if(page != -1)
+                    {
+                        return page;
+                    }
+                }
+            }
 
-            
 
-
+            if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
+            {
+                return quadKey;
+            }
+            else
+            {
+                return -1;
+            }
             //找到指定深度
+            /**
             if (targetMip == currMip)
             {
                 if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
@@ -270,7 +293,8 @@ namespace VirtualTexture
             }
             
             return -1;
-            
+            **/
+
         }
 
         public void CreatePage(int quadKey)
