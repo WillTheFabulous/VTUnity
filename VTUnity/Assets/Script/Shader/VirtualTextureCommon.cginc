@@ -36,6 +36,18 @@ struct v2f
     float2 uv : TEXCOORD0;
 };
 
+v2f vertUVWorld(appData v) {
+
+	v2f o;
+	UNITY_INITIALIZE_OUTPUT(v2f, o);
+
+	o.pos = UnityObjectToClipPos(v.vertex);
+
+	float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
+	o.uv = float2((worldPos.x - _TERRAINPOS.x) / _TERRAINSIZE.x, (worldPos.z - _TERRAINPOS.z) / _TERRAINSIZE.z);
+	return o;
+
+}
 
 v2f vert(appData v)
 {

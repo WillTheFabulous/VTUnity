@@ -132,6 +132,7 @@ namespace VirtualTexture
                 float currMipRectLength = 1.0f / (float)Math.Pow(2.0, mipBias);
                 float paddingLength = rectBaseLength * (4.0f / 256.0f);
 
+
                 Vector3 uv0 = new Vector2((float)pageXY.x * rectBaseLength - paddingLength, (float)pageXY.y * rectBaseLength - paddingLength);
                 Vector3 uv1 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength + paddingLength, (float)pageXY.y * rectBaseLength - paddingLength);
                 Vector3 uv2 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength + paddingLength, (float)pageXY.y * rectBaseLength + currMipRectLength + paddingLength);
@@ -151,11 +152,15 @@ namespace VirtualTexture
 
                 Vector2Int tile = RequestTile();
                 SetActive(tile);     
-                
-                Vector3 vertex0 = new Vector3(tile.x * 2 / Width - 1, tile.y * 2 / Height - 1, 0.1f);
-                Vector3 vertex1 = new Vector3((tile.x + 1) * 2 / Width - 1, tile.y * 2 / Height - 1, 0.1f);
-                Vector3 vertex2 = new Vector3((tile.x + 1) * 2 / Width - 1, (tile.y + 1) * 2 / Height - 1, 0.1f);
-                Vector3 vertex3 = new Vector3(tile.x * 2 / Width - 1, (tile.y + 1) * 2 / Height - 1 , 0.1f);
+                //TODO 加tiling
+                Vector3 vertex0 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y) * 2 / Height - 1, 0.1f);
+                Vector3 vertex1 = new Vector3((tile.x + 1) * 2 / Width - 1, (Height - tile.y) * 2 / Height - 1, 0.1f);
+                Vector3 vertex2 = new Vector3((tile.x + 1) * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1, 0.1f);
+                Vector3 vertex3 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1 , 0.1f);
+
+                print(vertex0);
+                print(vertex1); print(vertex2); print(vertex3);
+
 
                 quadVertexList.Add(vertex0);
                 quadVertexList.Add(vertex1);

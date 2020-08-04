@@ -13,7 +13,7 @@ Shader "VirtualTexture/Unlit"
 			#include "UnityCG.cginc"
 			#include "VirtualTextureCommon.cginc"
 			#pragma enable_d3d11_debug_symbols
-			#pragma vertex vert
+			#pragma vertex vertUVWorld
 			#pragma fragment frag
 			
 			
@@ -43,6 +43,7 @@ Shader "VirtualTexture/Unlit"
 				//结合physicalBaseUV(已经算上padding)，算出我们在physical texture上应该采的点
 				float2 finalSampleUV = physicalBaseUV + float2(_TILESIZE * pageRatio.x / float(physicalSize.x), _TILESIZE * pageRatio.y / float(physicalSize.y));
 				//SAMPLE PHYSICAL TEXTURE USING 
+				//float2 finalSampleUV = float2(0.07, 0.9);
 				fixed4 col = tex2D(_PHYSICALTEXTURE0, finalSampleUV);
 				/**
 				fixed4 col = fixed4(1, 1, 0, 0);

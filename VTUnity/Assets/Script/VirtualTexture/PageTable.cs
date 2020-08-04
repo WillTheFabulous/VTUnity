@@ -134,8 +134,8 @@ namespace VirtualTexture
                     //count++;
                     if (color.b != 255)
                     {
-                        print(color.r);
-                        print(color.g);
+                        //print(color.r);
+                        //print(color.g);
 
                         UseOrCreatePage(color.r, color.g, color.b);
                     }
