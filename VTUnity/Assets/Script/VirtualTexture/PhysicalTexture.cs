@@ -11,7 +11,7 @@ namespace VirtualTexture
         // Start is called before the first frame update
 
         [SerializeField]
-        private Vector2Int m_PhysicalTextureSize = new Vector2Int(5, 7);
+        private Vector2Int m_PhysicalTextureSize = new Vector2Int(8, 8);
 
         public Vector2Int PhysicalTextureSize { get { return m_PhysicalTextureSize; } }
 

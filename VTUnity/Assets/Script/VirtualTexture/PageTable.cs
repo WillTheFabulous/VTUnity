@@ -46,11 +46,14 @@ namespace VirtualTexture
         public Dictionary<int, PhysicalTileInfo> AddressMapping { get; set; }
 
 
+
         void Start()
         {
             quadRootKey = getKey(0, 0, MaxMipLevel);
 
             m_LookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false);
+
+            
 
             Shader.SetGlobalTexture("_LOOKUPTEX", m_LookupTexture);
             Shader.SetGlobalFloat("_MAXMIP", MaxMipLevel);
@@ -131,7 +134,9 @@ namespace VirtualTexture
                     //count++;
                     if (color.b != 255)
                     {
-                        
+                        print(color.r);
+                        print(color.g);
+
                         UseOrCreatePage(color.r, color.g, color.b);
                     }
                 }
@@ -165,8 +170,10 @@ namespace VirtualTexture
                 Vector2Int pageXY = getPageXY(currMapping.QuadKey);
                 int RectLength = mipRectLengthFromMip(currMip);
                 Color32 c = new Color32((byte)currMapping.TileIndex.x, (byte)currMapping.TileIndex.y, (byte)currMip, currentFrame);
+                //print(c);
+                //print(RectLength);
 
-                for(int x = pageXY.x; x < pageXY.x + RectLength; x++)
+                for (int x = pageXY.x; x < pageXY.x + RectLength; x++)
                 {
                     for(int y = pageXY.y; y < pageXY.y + RectLength; y++)
                     {
@@ -178,9 +185,10 @@ namespace VirtualTexture
             }
             m_LookupTexture.Apply(false);
 
+
         }
 
-        
+
         //
         private int UseOrCreatePage(int x, int y, int mip)
         {

@@ -259,13 +259,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_LocalRotation: {x: 0.17437106, y: -0, z: -0, w: 0.98468}
-  m_LocalPosition: {x: 375.8, y: 245.9, z: -37.8}
+  m_LocalRotation: {x: 0.36107627, y: -0, z: -0, w: 0.93253624}
+  m_LocalPosition: {x: 259.8, y: 417, z: -14.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 20.084002, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 42.333, y: 0, z: 0}
 --- !u!1 &1031306888
 GameObject:
   m_ObjectHideFlags: 0
@@ -301,6 +301,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_FeedbackShader: {fileID: 4800000, guid: 6aed6ae32c9ac344aa711a0c392eba94, type: 3}
   m_ReadbackTexture: {fileID: 0}
+  DemoTerrain: {fileID: 1818620059}
 --- !u!4 &1031306890
 Transform:
   m_ObjectHideFlags: 0
@@ -447,7 +448,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1818620057}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 193.5, y: 0, z: 253}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

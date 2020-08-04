@@ -50,7 +50,7 @@ PlayerSettings:
   m_ActiveColorSpace: 0
   m_RenderTargetSRGBOff: 0
   m_UseForwardOptimizedBatcher: 0
-  m_GameViewGamma: 1
+  m_GameViewGamma: 0
   m_SceneViewGamma: 1
   m_BackBufferDepthStoreDontCare: 0
   m_MTRendering: 1

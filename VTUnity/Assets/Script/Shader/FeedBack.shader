@@ -14,9 +14,23 @@
             #include "VirtualTextureCommon.cginc"	
             #pragma vertex vert
             #pragma fragment frag
+            v2f vertUVWorld(appData v){
+                
+                v2f o;
+                UNITY_INITIALIZE_OUTPUT(v2f, o);
+    
+                o.pos = UnityObjectToClipPos(v.vertex);
+
+                float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
+                o.uv = float2((worldPos.x - _TERRAINPOS.x) / _TERRAINSIZE.x + 0.5, (worldPos.z - _TERRAINPOS.z) / _TERRAINSIZE.z + 0.5 );
+                return o;
+            
+            }
+
 
             fixed4 frag(v2f i) : SV_Target
             {
+                
                 
                 float2 page = floor(i.uv * _PAGETABLESIZE);
                 float2 uv = i.uv * _PAGETABLESIZE * _TILESIZE; 

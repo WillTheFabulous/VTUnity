@@ -22,6 +22,9 @@ public class Feedback : MonoBehaviour
     //CPU SIDE FEEDBACK TEXTURE
     public Texture2D m_ReadbackTexture;
 
+    [SerializeField]
+    private Terrain DemoTerrain = default;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -96,8 +99,15 @@ public class Feedback : MonoBehaviour
 
             Shader.SetGlobalFloat("_PAGETABLESIZE", 64.0f);
             Shader.SetGlobalFloat("_TILESIZE", 256.0f);
+
+
+            Vector3 terrainSize = DemoTerrain.terrainData.size;
+            Vector3 terrainTransform = DemoTerrain.GetPosition();
+
+            Shader.SetGlobalVector("_TERRAINPOS", terrainTransform);
+            Shader.SetGlobalVector("_TERRAINSIZE", terrainSize);
             
-            
+
         }
         m_FeedbackCamera.targetTexture = TargetTexture;
 
