@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.Serialization.Json;
 using System.Transactions;
+using System.Threading;
 using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.Experimental.U2D;
@@ -46,17 +47,28 @@ namespace VirtualTexture
         public Dictionary<int, PhysicalTileInfo> AddressMapping { get; set; }
 
 
+        [SerializeField]
+        private int m_ThreadRectNum = 4;
+
+
+        private Thread[] m_Threads = default;
+
+
 
         void Start()
         {
             quadRootKey = getKey(0, 0, MaxMipLevel);
 
             m_LookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false);
-
-            
+            m_LookupTexture.wrapMode = TextureWrapMode.Clamp;
+            m_LookupTexture.filterMode = FilterMode.Point;
 
             Shader.SetGlobalTexture("_LOOKUPTEX", m_LookupTexture);
             Shader.SetGlobalFloat("_MAXMIP", MaxMipLevel);
+            Shader.SetGlobalFloat("_PAGETABLESIZE", TableSize);
+
+            m_Threads = new Thread[m_ThreadRectNum * m_ThreadRectNum];
+
 
             tileGenerator = (TileGeneration)GetComponent(typeof(TileGeneration));
             physicalTiles = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
@@ -131,11 +143,9 @@ namespace VirtualTexture
                     int pixelIndex = j * texWidth + i;
                     var color = textureData[pixelIndex];
                     //跳过白色背景
-                    //count++;
+
                     if (color.b != 255)
                     {
-                        //print(color.r);
-                        //print(color.g);
 
                         UseOrCreatePage(color.r, color.g, color.b);
                     }
@@ -209,8 +219,9 @@ namespace VirtualTexture
             }//当前page mip大于要求的mip(quadtree 还没加载到那个深度) 我们暂时使用并显示当前page 并把他的child加入生成队列
             else if(getMip(page) > mip)
             {
-                AddressMapping[page].ActiveFrame = Time.frameCount;
-                tileGenerator.SetActive(AddressMapping[page].TileIndex);
+
+                    AddressMapping[page].ActiveFrame = Time.frameCount;
+                    tileGenerator.SetActive(AddressMapping[page].TileIndex);
 
                 int childQuadKey = getChild(x, y, page);
                 

@@ -59,4 +59,9 @@ v2f vert(appData v)
     return o;
 
 }
+
+float mod(float  a, float  b)   
+{  
+	return a - b*floor(a / b);   
+}
 #endif

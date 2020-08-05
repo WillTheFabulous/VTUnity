@@ -30,6 +30,10 @@ namespace VirtualTexture
         //physical tile 到 虚拟纹理 quad 的 mapping 用以通过physical tile 找回quad key
         public Dictionary<Vector2Int,int> TileToQuadMapping { get; set; }
 
+        public int PaddingSize { get { return m_PaddingSize; } }
+
+        public int TileSize { get { return m_TileSize; } }
+
         
         void Start()
         {
@@ -37,7 +41,7 @@ namespace VirtualTexture
             TileToQuadMapping = new Dictionary<Vector2Int, int>();
             for(int i = 0; i < m_NumTextureType; i++)
             {
-                PhysicalTextures[i] = new RenderTexture(m_PhysicalTextureSize.x * (m_TileSize + m_PaddingSize), m_PhysicalTextureSize.y * (m_TileSize + m_PaddingSize), 0);
+                PhysicalTextures[i] = new RenderTexture(m_PhysicalTextureSize.x * (m_TileSize + 2 * m_PaddingSize), m_PhysicalTextureSize.y * (m_TileSize + 2 * m_PaddingSize), 0);
                 PhysicalTextures[i].useMipMap = false;
                 PhysicalTextures[i].wrapMode = TextureWrapMode.Clamp;
                 Shader.SetGlobalTexture("_PHYSICALTEXTURE" + i, PhysicalTextures[i]);

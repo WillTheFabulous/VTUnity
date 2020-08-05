@@ -97,10 +97,6 @@ public class Feedback : MonoBehaviour
             m_FeedbackCamera.targetTexture = TargetTexture;
 
 
-            Shader.SetGlobalFloat("_PAGETABLESIZE", 64.0f);
-            Shader.SetGlobalFloat("_TILESIZE", 256.0f);
-
-
             Vector3 terrainSize = DemoTerrain.terrainData.size;
             Vector3 terrainTransform = DemoTerrain.GetPosition();
 
