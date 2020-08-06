@@ -13,11 +13,12 @@ namespace VirtualTexture
         {
             
             var renderer = (PhysicalTexture)target;
-
+            
             foreach (var texture in renderer.PhysicalTextures)
             {
                 DrawTexture(texture, "Physical Texture");
             }
+            
     
         }
     }

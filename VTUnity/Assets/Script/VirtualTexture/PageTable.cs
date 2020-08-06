@@ -14,9 +14,11 @@ using UnityEngine.Experimental.U2D;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using UnityEngine.WSA;
+using Unity.Collections;
 
 namespace VirtualTexture
 {
+
     public class PageTable : MonoBehaviour
     {
         [SerializeField]
@@ -50,13 +52,24 @@ namespace VirtualTexture
         [SerializeField]
         private int m_ThreadRectNum = 4;
 
-
         private Thread[] m_Threads = default;
 
 
+        public struct ThreadParams
+        {
+            public Vector2Int start;
+            public Vector2Int end;
+            public NativeArray<Color32> pixels;
+            public int width;
+            public int height;
+        }
 
         void Start()
         {
+            if (m_TableSize < 1 || (m_TableSize & m_TableSize - 1) != 0)
+            {
+                m_TableSize = 64;
+            }
             quadRootKey = getKey(0, 0, MaxMipLevel);
 
             m_LookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false);
@@ -67,9 +80,15 @@ namespace VirtualTexture
             Shader.SetGlobalFloat("_MAXMIP", MaxMipLevel);
             Shader.SetGlobalFloat("_PAGETABLESIZE", TableSize);
 
+            if(m_ThreadRectNum < 1 || (m_ThreadRectNum & m_ThreadRectNum - 1) != 0)
+            {
+                m_ThreadRectNum = 4;
+            }
             m_Threads = new Thread[m_ThreadRectNum * m_ThreadRectNum];
+            //ThreadPool.SetMaxThreads(m_ThreadRectNum * m_ThreadRectNum, m_ThreadRectNum * m_ThreadRectNum);
 
 
+            
             tileGenerator = (TileGeneration)GetComponent(typeof(TileGeneration));
             physicalTiles = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             feedBack = (Feedback)GetComponent(typeof(Feedback));
@@ -78,19 +97,6 @@ namespace VirtualTexture
 
             feedBack.OnFeedbackReadComplete += ProcessFeedback;
             tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
-
-            /**
-            List<int> childs = getChilds(quadRootKey);
-            List<int> childschilds = getChilds(childs[0]);
-            int child0 = quadRootKey - 0x1000000;
-            print(child0 == childs[0]);
-            print(getMip(child0));
-            print(childs[1] - childs[0]);
-            print(childschilds[1] - childschilds[0]);
-
-            **/
-            //print(getMip(childs[0]) - getMip(childschilds[0]));
-
 
         }
 
@@ -118,6 +124,8 @@ namespace VirtualTexture
 
         }
 
+
+
         private void ProcessFeedback(Texture2D texture)
         {
             //TODO: MAKE UNIQUE PAGE LIST 多线程处理？
@@ -129,16 +137,13 @@ namespace VirtualTexture
 
 
             int texWidth = texture.width;
-            int texheight = texture.height;
+            int texHeight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
 
-
-            
-            //Todo 多线程!!!!!!!!!!
-
+           
             for (int i = 0; i < texWidth; i += 10)
             {
-                for(int j = 0; j < texheight; j += 10)
+                for(int j = 0; j < texHeight; j += 10)
                 {
                     int pixelIndex = j * texWidth + i;
                     var color = textureData[pixelIndex];
@@ -152,20 +157,50 @@ namespace VirtualTexture
                 }
             }
             
-            //print(count);
 
-            //Update after DownScale is implemented
-            /**
-            foreach (var color in texture.GetRawTextureData<Color32>())
-            {
-                if (color.b != 255)
-                    {
-                        
-                        UseOrCreatePage(color.r, color.g, color.b);
-                    }
-            }
-            **/
+            //Todo 多线程!!!!!!!!!!
             
+            /*int threadRectSizeWidth = texWidth / m_ThreadRectNum;
+            int threadRectSizeHeight = texHeight / m_ThreadRectNum;
+
+            using (var countDownEvents = new CountdownEvent(m_ThreadRectNum * m_ThreadRectNum))
+            {
+                for (int i = 0; i < m_ThreadRectNum; i++)
+                {
+                    for (int j = 0; j < m_ThreadRectNum; j++)
+                    {
+                        Vector2Int start = new Vector2Int(i * threadRectSizeWidth, j * threadRectSizeHeight);
+                        Vector2Int end = new Vector2Int();
+                        end.x = (i == m_ThreadRectNum - 1) ? texWidth : (i + 1) * threadRectSizeWidth;
+                        end.y = (j == m_ThreadRectNum - 1) ? texHeight : (j + 1) * threadRectSizeHeight;
+                        ThreadParams Params = new ThreadParams();
+                        Params.start = start;
+                        Params.end = end;
+                        Params.width = texWidth;
+                        Params.height = texHeight;
+                        Params.pixels = texrureData;
+                        //???
+
+                        //print(Params.start);
+                        //print(Params.end);
+
+                        ThreadPool.QueueUserWorkItem(x =>
+                        {
+                            UseOrCreatePageThread(x);
+                            countDownEvents.Signal();
+                        }, Params);
+                        //int threadId = j * m_ThreadRectNum + i;
+                        //ParameterizedThreadStart currThreadStart = new ParameterizedThreadStart(UseOrCreatePageThread);
+                        //m_Threads[threadId] = new Thread(currThreadStart);
+
+                    }
+                }
+                countDownEvents.Wait();
+            }*/
+
+
+
+
             var pixels = m_LookupTexture.GetRawTextureData<Color32>();
             var currentFrame = (byte)Time.frameCount;
             foreach (var kv in AddressMapping)
@@ -180,8 +215,6 @@ namespace VirtualTexture
                 Vector2Int pageXY = getPageXY(currMapping.QuadKey);
                 int RectLength = mipRectLengthFromMip(currMip);
                 Color32 c = new Color32((byte)currMapping.TileIndex.x, (byte)currMapping.TileIndex.y, (byte)currMip, currentFrame);
-                //print(c);
-                //print(RectLength);
 
                 for (int x = pageXY.x; x < pageXY.x + RectLength; x++)
                 {
@@ -198,10 +231,33 @@ namespace VirtualTexture
 
         }
 
+        private void UseOrCreatePageThread(System.Object obj)
+        {
+            ThreadParams p = (ThreadParams)obj;
+            Vector2Int start = p.start;
+            Vector2Int end = p.end;
+            for(int x = start.x; x < end.x; x += 10)
+            {
+                for(int y = start.y; y < end.y; y += 10)
+                {
+                    int pixelIndex = y * p.width + x;
+                    var color = p.pixels[pixelIndex];
+                    //跳过白色背景
+                    if (color.b != 255)
+                    {
+
+                        UseOrCreatePage(color.r, color.g, color.b);
+                    }
+                }
+            }
+        }
+
 
         //
         private int UseOrCreatePage(int x, int y, int mip)
         {
+            UnityEngine.Profiling.Profiler.BeginSample("UseOrCreatePage");
+
 
             if(mip > MaxMipLevel)
             {
@@ -219,10 +275,11 @@ namespace VirtualTexture
             }//当前page mip大于要求的mip(quadtree 还没加载到那个深度) 我们暂时使用并显示当前page 并把他的child加入生成队列
             else if(getMip(page) > mip)
             {
-
+                //lock (AddressMapping)
+                //{
                     AddressMapping[page].ActiveFrame = Time.frameCount;
                     tileGenerator.SetActive(AddressMapping[page].TileIndex);
-
+                //}
                 int childQuadKey = getChild(x, y, page);
                 
                 if(childQuadKey == -1)
@@ -233,9 +290,12 @@ namespace VirtualTexture
             }//mip 符合要求 直接使用当前page
             else
             {
-                AddressMapping[page].ActiveFrame = Time.frameCount;
+                //lock (AddressMapping)
+                //{
+                    AddressMapping[page].ActiveFrame = Time.frameCount;
+                //}
             }
-
+            UnityEngine.Profiling.Profiler.EndSample();
             return page; 
         }
 
@@ -262,75 +322,42 @@ namespace VirtualTexture
                 }
             }
 
-
-            if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
-            {
-                return quadKey;
-            }
-            else
-            {
-                return -1;
-            }
+//lock(AddressMapping){
+                if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
+                {
+                    return quadKey;
+                }
+                else
+                {
+                    return -1;
+                }
+            //}
             //找到指定深度
-            /**
-            if (targetMip == currMip)
-            {
-                if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
-                {
-                    return quadKey;
-                }
-                else
-                {
-                    return -1;
-                }
-            }//未到达指定深度
-            else if(targetMip < currMip)
-            {
-                List<int> childs = getChilds(quadKey);
-
-                if(childs == null)
-                {
-                    return -1;
-                }
-                foreach(var child in childs)
-                {
-                    int page = SearchPage(x, y, targetMip, child);
-                    if(page != -1)
-                    {
-                        return page;
-                    }
-                }
-
-                if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
-                {
-                    return quadKey;
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-            
-            return -1;
-            **/
+           
 
         }
 
         public void CreatePage(int quadKey)
         {
             //不重复生成
-            if(AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.Loading)
-            {
-                return;
-            }
+            //lock (AddressMapping)
+            //{
+                if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.Loading)
+                {
+                    return;
+                }
+            //}
 
             PhysicalTileInfo info = new PhysicalTileInfo();
             info.tileStatus = TileStatus.Loading;
 
             info.QuadKey = quadKey;
 
-            AddressMapping[quadKey] = info;
-            tileGenerator.GeneratePageTask(quadKey);
+            //lock (AddressMapping)
+            //{
+                AddressMapping[quadKey] = info;
+                tileGenerator.GeneratePageTask(quadKey);
+            //}
         }
 
         public void OnGenerationComplete(List<int> quadKeys)
