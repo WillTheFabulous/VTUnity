@@ -53,6 +53,8 @@ namespace VirtualTexture
         private int m_ThreadRectNum = 4;
 
         private Thread[] m_Threads = default;
+        private readonly static object m_Locker = new object();
+        private CountdownEvent m_CountDownEvent; 
 
 
         public struct ThreadParams
@@ -85,6 +87,7 @@ namespace VirtualTexture
                 m_ThreadRectNum = 4;
             }
             m_Threads = new Thread[m_ThreadRectNum * m_ThreadRectNum];
+            m_CountDownEvent = new CountdownEvent(m_ThreadRectNum * m_ThreadRectNum);
             //ThreadPool.SetMaxThreads(m_ThreadRectNum * m_ThreadRectNum, m_ThreadRectNum * m_ThreadRectNum);
 
 
@@ -140,10 +143,10 @@ namespace VirtualTexture
             int texHeight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
 
-           
-            for (int i = 0; i < texWidth; i += 10)
+
+            /*for (int i = 0; i < texWidth; i += 10)
             {
-                for(int j = 0; j < texHeight; j += 10)
+                for (int j = 0; j < texHeight; j += 10)
                 {
                     int pixelIndex = j * texWidth + i;
                     var color = textureData[pixelIndex];
@@ -155,15 +158,18 @@ namespace VirtualTexture
                         UseOrCreatePage(color.r, color.g, color.b);
                     }
                 }
-            }
-            
+            }*/
+
 
             //Todo 多线程!!!!!!!!!!
-            
-            /*int threadRectSizeWidth = texWidth / m_ThreadRectNum;
+            //TODO garbage collector!!!!!!!!!!!!!!!!!!!!!!!!
+            //print(textureData);
+
+            int threadRectSizeWidth = texWidth / m_ThreadRectNum;
             int threadRectSizeHeight = texHeight / m_ThreadRectNum;
 
-            using (var countDownEvents = new CountdownEvent(m_ThreadRectNum * m_ThreadRectNum))
+            int toProcess = m_ThreadRectNum * m_ThreadRectNum;
+            using (ManualResetEvent resetEvent = new ManualResetEvent(false))
             {
                 for (int i = 0; i < m_ThreadRectNum; i++)
                 {
@@ -178,31 +184,34 @@ namespace VirtualTexture
                         Params.end = end;
                         Params.width = texWidth;
                         Params.height = texHeight;
-                        Params.pixels = texrureData;
-                        //???
-
+                        Params.pixels = textureData;
                         //print(Params.start);
                         //print(Params.end);
 
-                        ThreadPool.QueueUserWorkItem(x =>
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(x =>
                         {
                             UseOrCreatePageThread(x);
-                            countDownEvents.Signal();
-                        }, Params);
+                            if (Interlocked.Decrement(ref toProcess) == 0)
+                                resetEvent.Set();
+                        }), Params);
                         //int threadId = j * m_ThreadRectNum + i;
                         //ParameterizedThreadStart currThreadStart = new ParameterizedThreadStart(UseOrCreatePageThread);
                         //m_Threads[threadId] = new Thread(currThreadStart);
-
                     }
                 }
-                countDownEvents.Wait();
-            }*/
+                //print(toProcess);
+                resetEvent.WaitOne(-1);
+            }
+
 
 
 
 
             var pixels = m_LookupTexture.GetRawTextureData<Color32>();
             var currentFrame = (byte)Time.frameCount;
+            //print("count is" + count);
+            //print("thread num is" + m_ThreadRectNum * m_ThreadRectNum);
+
             foreach (var kv in AddressMapping)
             {
                 PhysicalTileInfo currMapping = kv.Value;
@@ -236,6 +245,8 @@ namespace VirtualTexture
             ThreadParams p = (ThreadParams)obj;
             Vector2Int start = p.start;
             Vector2Int end = p.end;
+            //print(start);
+            //print(end);
             for(int x = start.x; x < end.x; x += 10)
             {
                 for(int y = start.y; y < end.y; y += 10)
@@ -250,6 +261,9 @@ namespace VirtualTexture
                     }
                 }
             }
+            //print("complete" + start.ToString() + end.ToString());
+            //print(p.pixels[140550]);
+            //m_CountDownEvent.Signal();
         }
 
 
@@ -266,34 +280,41 @@ namespace VirtualTexture
             
             //找到最深miplevel的可用quadtree page
             int page = SearchPage(x, y, mip, quadRootKey);
-
+           
+            //print(page);
 
             //没有任何可用page 加载root
             if(page == -1)
             {
+                print("equals -1");
                 CreatePage(quadRootKey);
             }//当前page mip大于要求的mip(quadtree 还没加载到那个深度) 我们暂时使用并显示当前page 并把他的child加入生成队列
             else if(getMip(page) > mip)
             {
-                //lock (AddressMapping)
-                //{
+                print("shallow");
+                lock (m_Locker)
+                {
+
                     AddressMapping[page].ActiveFrame = Time.frameCount;
+                    print("inlock");
                     tileGenerator.SetActive(AddressMapping[page].TileIndex);
-                //}
+                }
                 int childQuadKey = getChild(x, y, page);
-                
+                print(childQuadKey);
                 if(childQuadKey == -1)
                 {
                     return -1;
                 }
                 CreatePage(childQuadKey);
+                //print("create child!!");
             }//mip 符合要求 直接使用当前page
             else
             {
-                //lock (AddressMapping)
-                //{
+                print("reach");
+                lock (m_Locker)
+                {
                     AddressMapping[page].ActiveFrame = Time.frameCount;
-                //}
+                }
             }
             UnityEngine.Profiling.Profiler.EndSample();
             return page; 
@@ -322,7 +343,7 @@ namespace VirtualTexture
                 }
             }
 
-//lock(AddressMapping){
+            lock(m_Locker){
                 if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
                 {
                     return quadKey;
@@ -331,7 +352,7 @@ namespace VirtualTexture
                 {
                     return -1;
                 }
-            //}
+            }
             //找到指定深度
            
 
@@ -340,24 +361,22 @@ namespace VirtualTexture
         public void CreatePage(int quadKey)
         {
             //不重复生成
-            //lock (AddressMapping)
-            //{
+            lock (m_Locker)
+            {
                 if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.Loading)
                 {
                     return;
                 }
-            //}
+           
 
-            PhysicalTileInfo info = new PhysicalTileInfo();
-            info.tileStatus = TileStatus.Loading;
+                PhysicalTileInfo info = new PhysicalTileInfo();
+                info.tileStatus = TileStatus.Loading;
 
-            info.QuadKey = quadKey;
-
-            //lock (AddressMapping)
-            //{
+                info.QuadKey = quadKey;
                 AddressMapping[quadKey] = info;
                 tileGenerator.GeneratePageTask(quadKey);
-            //}
+                
+            }
         }
 
         public void OnGenerationComplete(List<int> quadKeys)

@@ -233,7 +233,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 1
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -385,7 +385,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_PhysicalTextureSize: {x: 8, y: 8}
   m_TileSize: 256
-  m_PaddingSize: 4
+  m_PaddingSize: 16
   m_NumTextureType: 2
 --- !u!1 &1818620057
 GameObject:

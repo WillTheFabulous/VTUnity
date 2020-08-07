@@ -38,6 +38,8 @@ namespace VirtualTexture
 
         private LruCache m_TilePool = new LruCache();
 
+        private readonly static object m_Locker = new object();
+
 
         void Start()
         {
@@ -70,15 +72,16 @@ namespace VirtualTexture
 
         public void GeneratePageTask(int quadKey)
         {
+
             if (!TilesToGenerate.Contains(quadKey))
             {
                 TilesToGenerate.Add(quadKey);
             }
+
         }
 
         public void GeneratePage()
         {
-
             
             if(TilesToGenerate.Count == 0)
             {
@@ -106,6 +109,7 @@ namespace VirtualTexture
             CommandBuffer tempCB = new CommandBuffer();
             tempCB.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
             Graphics.ExecuteCommandBuffer(tempCB);
+            //physicalTexture.PhysicalTextures[0].GenerateMips();
 
 
             OnTileGenerationComplete?.Invoke(TilesForMesh);
