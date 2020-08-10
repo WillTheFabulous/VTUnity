@@ -121,10 +121,7 @@ public class Feedback : MonoBehaviour
 
     }
 
-    private void OnPreRender()
-    {
-        
-    }
+
 
     private void OnPostRender()
     {

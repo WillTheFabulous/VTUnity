@@ -16,7 +16,8 @@ namespace VirtualTexture
             
             foreach (var texture in renderer.PhysicalTextures)
             {
-                DrawTexture(texture, "Physical Texture");
+                DrawTexture(texture, "Physical Texture", 0);
+                DrawTexture(texture, "Physical Texture", 1);
             }
             
     

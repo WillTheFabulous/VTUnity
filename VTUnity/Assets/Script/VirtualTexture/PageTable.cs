@@ -15,6 +15,7 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using UnityEngine.WSA;
 using Unity.Collections;
+using System.Data;
 
 namespace VirtualTexture
 {
@@ -45,8 +46,12 @@ namespace VirtualTexture
         //8 bits miplevel, 12 bits pageX, 12 bits pageY
         private int quadRootKey = default;
 
+        private TableNode quadRoot = default;
+
         //indirection texture 到 physical texture 的 mapping
         public Dictionary<int, PhysicalTileInfo> AddressMapping { get; set; }
+
+        public Dictionary<int, int[]> ChildList { get; set; }
 
 
         [SerializeField]
@@ -54,8 +59,14 @@ namespace VirtualTexture
 
         private Thread[] m_Threads = default;
         private readonly static object m_Locker = new object();
-        private CountdownEvent m_CountDownEvent; 
+        private CountdownEvent m_CountDownEvent;
+        private ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
+        private ReaderWriterLockSlim rwl2 = new ReaderWriterLockSlim();
 
+        public Dictionary<int, TableNode> m_Pages { get; set; }
+
+
+        
 
         public struct ThreadParams
         {
@@ -64,6 +75,7 @@ namespace VirtualTexture
             public NativeArray<Color32> pixels;
             public int width;
             public int height;
+            public int frame;
         }
 
         void Start()
@@ -74,6 +86,7 @@ namespace VirtualTexture
             }
             quadRootKey = getKey(0, 0, MaxMipLevel);
 
+
             m_LookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false);
             m_LookupTexture.wrapMode = TextureWrapMode.Clamp;
             m_LookupTexture.filterMode = FilterMode.Point;
@@ -82,14 +95,13 @@ namespace VirtualTexture
             Shader.SetGlobalFloat("_MAXMIP", MaxMipLevel);
             Shader.SetGlobalFloat("_PAGETABLESIZE", TableSize);
 
-            if(m_ThreadRectNum < 1 || (m_ThreadRectNum & m_ThreadRectNum - 1) != 0)
+            if(m_ThreadRectNum < 1 )
             {
                 m_ThreadRectNum = 4;
             }
-            m_Threads = new Thread[m_ThreadRectNum * m_ThreadRectNum];
-            m_CountDownEvent = new CountdownEvent(m_ThreadRectNum * m_ThreadRectNum);
-            //ThreadPool.SetMaxThreads(m_ThreadRectNum * m_ThreadRectNum, m_ThreadRectNum * m_ThreadRectNum);
 
+
+            m_CountDownEvent = new CountdownEvent(m_ThreadRectNum * m_ThreadRectNum);
 
             
             tileGenerator = (TileGeneration)GetComponent(typeof(TileGeneration));
@@ -97,33 +109,19 @@ namespace VirtualTexture
             feedBack = (Feedback)GetComponent(typeof(Feedback));
 
             AddressMapping = new Dictionary<int, PhysicalTileInfo>();
+            ChildList = new Dictionary<int, int[]>();
 
             feedBack.OnFeedbackReadComplete += ProcessFeedback;
-            tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
+            //tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
+            tileGenerator.OnTileGenerationComplete += OnGenerationCompletePointer;
+            //FOR POINTER
+            quadRoot = new TableNode(MaxMipLevel, 0, 0, TableSize, TableSize);
+            m_Pages = new Dictionary<int, TableNode>();
 
         }
 
         void Update()
         {
-            /**
-            if(Time.frameCount == 2)
-            {
-                CreatePage(quadRootKey);
-                
-                List<int> childs = getChilds(quadRootKey);
-                foreach (var child in childs)
-                {
-                    CreatePage(child);
-                    List<int> childchilds = getChilds(child);
-                    foreach (var childchild in childchilds)
-                    {
-                        CreatePage(childchild);
-                    }
-                }
-                
-
-            }
-            **/
 
         }
 
@@ -136,15 +134,13 @@ namespace VirtualTexture
 
             //每一帧 我们将当前feedback texture中 还没有被开始生产的tile 扔入生产队列 并在 quadtree 中插入他的信息
 
-            List<int> UniquePageList = new List<int>();
-
 
             int texWidth = texture.width;
             int texHeight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
 
 
-            /*for (int i = 0; i < texWidth; i += 10)
+            for (int i = 0; i < texWidth; i += 10)
             {
                 for (int j = 0; j < texHeight; j += 10)
                 {
@@ -154,21 +150,20 @@ namespace VirtualTexture
 
                     if (color.b != 255)
                     {
-
-                        UseOrCreatePage(color.r, color.g, color.b);
+                        UseOrCreatePagePointer(color.r, color.g, color.b, (int)Time.frameCount);
                     }
                 }
-            }*/
+            }
 
 
             //Todo 多线程!!!!!!!!!!
             //TODO garbage collector!!!!!!!!!!!!!!!!!!!!!!!!
-            //print(textureData);
 
-            int threadRectSizeWidth = texWidth / m_ThreadRectNum;
+            /*int threadRectSizeWidth = texWidth / m_ThreadRectNum;
             int threadRectSizeHeight = texHeight / m_ThreadRectNum;
 
             int toProcess = m_ThreadRectNum * m_ThreadRectNum;
+            //UnityEngine.Profiling.Profiler.BeginSample("UseOrCreatePage");
             using (ManualResetEvent resetEvent = new ManualResetEvent(false))
             {
                 for (int i = 0; i < m_ThreadRectNum; i++)
@@ -185,8 +180,8 @@ namespace VirtualTexture
                         Params.width = texWidth;
                         Params.height = texHeight;
                         Params.pixels = textureData;
-                        //print(Params.start);
-                        //print(Params.end);
+                        Params.frame = (int)Time.frameCount;
+
 
                         ThreadPool.QueueUserWorkItem(new WaitCallback(x =>
                         {
@@ -194,48 +189,17 @@ namespace VirtualTexture
                             if (Interlocked.Decrement(ref toProcess) == 0)
                                 resetEvent.Set();
                         }), Params);
-                        //int threadId = j * m_ThreadRectNum + i;
-                        //ParameterizedThreadStart currThreadStart = new ParameterizedThreadStart(UseOrCreatePageThread);
-                        //m_Threads[threadId] = new Thread(currThreadStart);
+
                     }
                 }
                 //print(toProcess);
-                resetEvent.WaitOne(-1);
-            }
+                resetEvent.WaitOne();
 
+            }*/
 
+            //UnityEngine.Profiling.Profiler.EndSample();
 
-
-
-            var pixels = m_LookupTexture.GetRawTextureData<Color32>();
-            var currentFrame = (byte)Time.frameCount;
-            //print("count is" + count);
-            //print("thread num is" + m_ThreadRectNum * m_ThreadRectNum);
-
-            foreach (var kv in AddressMapping)
-            {
-                PhysicalTileInfo currMapping = kv.Value;
-                
-                if(currMapping.ActiveFrame != Time.frameCount || currMapping.tileStatus != TileStatus.LoadingComplete)
-                {
-                    continue;
-                }
-                int currMip = getMip(currMapping.QuadKey);
-                Vector2Int pageXY = getPageXY(currMapping.QuadKey);
-                int RectLength = mipRectLengthFromMip(currMip);
-                Color32 c = new Color32((byte)currMapping.TileIndex.x, (byte)currMapping.TileIndex.y, (byte)currMip, currentFrame);
-
-                for (int x = pageXY.x; x < pageXY.x + RectLength; x++)
-                {
-                    for(int y = pageXY.y; y < pageXY.y + RectLength; y++)
-                    {
-                        var id = y * TableSize + x;
-                        if (pixels[id].b > c.b || pixels[id].a != currentFrame)
-                            pixels[id] = c;
-                    }
-                }                
-            }
-            m_LookupTexture.Apply(false);
+            RefreshLookupTablePointer();
 
 
         }
@@ -245,8 +209,7 @@ namespace VirtualTexture
             ThreadParams p = (ThreadParams)obj;
             Vector2Int start = p.start;
             Vector2Int end = p.end;
-            //print(start);
-            //print(end);
+
             for(int x = start.x; x < end.x; x += 10)
             {
                 for(int y = start.y; y < end.y; y += 10)
@@ -257,66 +220,60 @@ namespace VirtualTexture
                     if (color.b != 255)
                     {
 
-                        UseOrCreatePage(color.r, color.g, color.b);
+                        UseOrCreatePage(color.r, color.g, color.b, p.frame);
                     }
                 }
             }
-            //print("complete" + start.ToString() + end.ToString());
-            //print(p.pixels[140550]);
-            //m_CountDownEvent.Signal();
+
         }
 
 
         //
-        private int UseOrCreatePage(int x, int y, int mip)
+        private int UseOrCreatePage(int x, int y, int mip, int frame)
         {
-            UnityEngine.Profiling.Profiler.BeginSample("UseOrCreatePage");
-
+            //print(mip);
 
             if(mip > MaxMipLevel)
             {
                 mip = MaxMipLevel;
             }
-            
+
             //找到最深miplevel的可用quadtree page
             int page = SearchPage(x, y, mip, quadRootKey);
-           
-            //print(page);
 
             //没有任何可用page 加载root
-            if(page == -1)
+            if (page == -1)
             {
-                print("equals -1");
+
                 CreatePage(quadRootKey);
             }//当前page mip大于要求的mip(quadtree 还没加载到那个深度) 我们暂时使用并显示当前page 并把他的child加入生成队列
-            else if(getMip(page) > mip)
-            {
-                print("shallow");
-                lock (m_Locker)
-                {
-
-                    AddressMapping[page].ActiveFrame = Time.frameCount;
-                    print("inlock");
-                    tileGenerator.SetActive(AddressMapping[page].TileIndex);
-                }
-                int childQuadKey = getChild(x, y, page);
-                print(childQuadKey);
-                if(childQuadKey == -1)
-                {
-                    return -1;
-                }
-                CreatePage(childQuadKey);
-                //print("create child!!");
-            }//mip 符合要求 直接使用当前page
             else
             {
-                print("reach");
-                lock (m_Locker)
+                //mip 符合要求 直接使用当前page
+                rwl.EnterWriteLock();
+                try
                 {
-                    AddressMapping[page].ActiveFrame = Time.frameCount;
+                    AddressMapping[page].ActiveFrame = frame;
+                    tileGenerator.SetActive(AddressMapping[page].TileIndex);
                 }
+                finally
+                {
+                    rwl.ExitWriteLock();
+                }
+
+                //当前page mip大于要求的mip(quadtree 还没加载到那个深度) 我们暂时使用并显示当前page 并把他的child加入生成队列
+                if (getMip(page) > mip)
+                {
+                    int childQuadKey = getChild(x, y, page);
+                    if (childQuadKey == -1)
+                    {
+                        return -1;
+                    }
+                    CreatePage(childQuadKey);
+                }
+
             }
-            UnityEngine.Profiling.Profiler.EndSample();
+
             return page; 
         }
 
@@ -332,7 +289,7 @@ namespace VirtualTexture
             int currMip = getMip(quadKey);
             if (currMip > targetMip)
             {
-                List<int> childs = getChilds(quadKey);
+                int[] childs = getChilds(quadKey);
                 foreach(var child in childs)
                 {
                     int page = SearchPage(x, y, targetMip, child);
@@ -341,9 +298,12 @@ namespace VirtualTexture
                         return page;
                     }
                 }
+                
             }
 
-            lock(m_Locker){
+            rwl.EnterReadLock();
+            try
+            {
                 if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.LoadingComplete)
                 {
                     return quadKey;
@@ -353,6 +313,11 @@ namespace VirtualTexture
                     return -1;
                 }
             }
+            finally
+            {
+                rwl.ExitReadLock();
+            }
+            
             //找到指定深度
            
 
@@ -361,29 +326,170 @@ namespace VirtualTexture
         public void CreatePage(int quadKey)
         {
             //不重复生成
-            lock (m_Locker)
+            rwl.EnterReadLock();
+            try
             {
                 if (AddressMapping.ContainsKey(quadKey) && AddressMapping[quadKey].tileStatus == TileStatus.Loading)
                 {
                     return;
                 }
+            }
+            finally
+            {
+                rwl.ExitReadLock();
+            }
            
 
                 PhysicalTileInfo info = new PhysicalTileInfo();
                 info.tileStatus = TileStatus.Loading;
-
+            rwl.EnterWriteLock();
+            try
+            {
                 info.QuadKey = quadKey;
                 AddressMapping[quadKey] = info;
                 tileGenerator.GeneratePageTask(quadKey);
+            }
+            finally
+            {
+                rwl.ExitWriteLock();
+            }
                 
+            
+        }
+
+
+        private void RefreshLookupTable()
+        {
+            var pixels = m_LookupTexture.GetRawTextureData<Color32>();
+            var currentFrame = (byte)Time.frameCount;
+
+
+            foreach (var kv in AddressMapping)
+            {
+                PhysicalTileInfo currMapping = kv.Value;
+
+                if (currMapping.ActiveFrame != Time.frameCount || currMapping.tileStatus != TileStatus.LoadingComplete)
+                {
+                    continue;
+                }
+                int currMip = getMip(currMapping.QuadKey);
+                Vector2Int pageXY = getPageXY(currMapping.QuadKey);
+                int RectLength = mipRectLengthFromMip(currMip);
+                Color32 c = new Color32((byte)currMapping.TileIndex.x, (byte)currMapping.TileIndex.y, (byte)currMip, currentFrame);
+
+                for (int x = pageXY.x; x < pageXY.x + RectLength; x++)
+                {
+                    for (int y = pageXY.y; y < pageXY.y + RectLength; y++)
+                    {
+                        var id = y * TableSize + x;
+                        if (pixels[id].b > c.b || pixels[id].a != currentFrame)
+                            pixels[id] = c;
+                    }
+                }
+            }
+            m_LookupTexture.Apply(false);
+        }
+
+
+        private void UseOrCreatePagePointer(int x, int y, int mip, int frame)
+        {
+            if (mip > MaxMipLevel)
+            {
+                mip = MaxMipLevel;
+            }
+
+            var page = quadRoot.GetAvailable(x, y, mip);
+            if(page == null)
+            {
+                CreatePagePointer(x, y, quadRoot);
+            }
+            else
+            {
+                page.Payload.ActiveFrame = frame;
+                tileGenerator.SetActive(page.Payload.TileIndex);
+
+
+                if (page.MipLevel > mip)
+                {
+                    CreatePagePointer(x,y,page.GetChild(x,y));
+                }
+            }
+        }
+
+
+        public void CreatePagePointer(int x, int y, TableNode node)
+        {
+            if(node == null)
+            {
+                return;
+            }
+
+            if(node.Payload.tileStatus == TileStatus.Loading || node.Payload.tileStatus == TileStatus.LoadingComplete)
+            {
+                return;
+            }
+
+            node.Payload.tileStatus = TileStatus.Loading;
+            int key = getKey(node.Rect.x, node.Rect.y, node.MipLevel);
+            m_Pages[key] = node;
+            tileGenerator.GeneratePageTask(key);
+
+        }
+
+        public void RefreshLookupTablePointer()
+        {
+            var pixels = m_LookupTexture.GetRawTextureData<Color32>();
+            var currentFrame = (byte)Time.frameCount;
+
+
+            foreach (var kv in m_Pages)
+            {
+                TableNode currNode = kv.Value;
+                PhysicalTileInfo currMapping = currNode.Payload;
+
+                if (currMapping.ActiveFrame != Time.frameCount || currMapping.tileStatus != TileStatus.LoadingComplete)
+                {
+                    continue;
+                }
+                int currMip = currNode.MipLevel;
+                Vector2Int pageXY = getPageXY(currMapping.QuadKey);
+                int RectLength = mipRectLengthFromMip(currMip);
+                Color32 c = new Color32((byte)currMapping.TileIndex.x, (byte)currMapping.TileIndex.y, (byte)currMip, currentFrame);
+
+                for (int x = currNode.Rect.x; x < currNode.Rect.xMax; x++)
+                {
+                    for (int y = currNode.Rect.y; y < currNode.Rect.yMax; y++)
+                    {
+                        var id = y * TableSize + x;
+                        if (pixels[id].b > c.b || pixels[id].a != currentFrame)
+                            pixels[id] = c;
+                    }
+                }
+            }
+            m_LookupTexture.Apply(false);
+        }
+
+        public void OnGenerationCompletePointer(List<int> quadKeys)
+        {
+            foreach (var quadKey in quadKeys)
+            {
+                m_Pages[quadKey].Payload.tileStatus = TileStatus.LoadingComplete;
             }
         }
 
         public void OnGenerationComplete(List<int> quadKeys)
         {
-            foreach(var quadKey in quadKeys)
+            rwl.EnterWriteLock();
+            try
             {
-                AddressMapping[quadKey].tileStatus = TileStatus.LoadingComplete;
+                foreach (var quadKey in quadKeys)
+                {
+                    AddressMapping[quadKey].tileStatus = TileStatus.LoadingComplete;
+                }
+            }
+            finally
+            {
+                rwl.ExitWriteLock();
             }
         }
 
@@ -404,7 +510,7 @@ namespace VirtualTexture
 
 
         //返回一个四个方向上childs的quadkey的list
-        private List<int> getChilds(int key)
+        private int[] getChilds(int key)
         {
             int curr_mip = getMip(key);
 
@@ -412,29 +518,41 @@ namespace VirtualTexture
             {
                 return null;
             }
+            rwl2.EnterReadLock();
+            try
+            {
+                if (ChildList.ContainsKey(key))
+                {
+                    return ChildList[key];
+                }
+            }
+            finally
+            {
+                rwl2.ExitReadLock();
+            }
 
-            /**
-            Vector2Int pageXY = getPageXY(key);
-
-            int rectLength = mipRectLengthFromMip(curr_mip - 1);
-            
-            int child1 = getKey(pageXY.x, pageXY.y, curr_mip - 1);
-            int child2 = getKey(pageXY.x + rectLength, pageXY.y, curr_mip - 1);
-            int child3 = getKey(pageXY.x, pageXY.y + rectLength, curr_mip - 1);
-            int child4 = getKey(pageXY.x + rectLength, pageXY.y + rectLength, curr_mip - 1);
-            **/
             int delta = 1 << ((curr_mip - 1) * 2);
             int child1 = key - 0x1000000;
             int child2 = child1 + delta;
             int child3 = child2 + delta;
             int child4 = child3 + delta;
             
-            List<int> result = new List<int>();
+            int[] result = new int[4];
 
-            result.Add(child1);
-            result.Add(child2);
-            result.Add(child3);
-            result.Add(child4);
+            result[0] = child1;
+            result[1] = child2;
+            result[2] = child3;
+            result[3] = child4;
+
+            rwl2.EnterWriteLock();
+            try
+            {
+                ChildList[key] = result;
+            }
+            finally
+            {
+                rwl2.ExitWriteLock();
+            }
 
             return result;
         }
@@ -442,7 +560,7 @@ namespace VirtualTexture
         //返回包含x和y的下一级mip的child
         private int getChild(int x, int y, int quadKey)
         {
-            List<int> childs = getChilds(quadKey);
+            int[] childs = getChilds(quadKey);
             foreach(var child in childs)
             {
                 if (Contains(x, y, child))

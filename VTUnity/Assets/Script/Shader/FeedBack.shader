@@ -28,7 +28,7 @@
                 float2 dy = ddy(uv);
                 float rho = max(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
                 float lambda = log2(rho);
-                int mip = max(int(lambda + 0.5), 0);
+                int mip = max(int(lambda + 0.5) , 0);
                 return fixed4(page / 255.0, mip / 255.0, 1);
                 
                 

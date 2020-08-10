@@ -55,12 +55,12 @@
   <ItemGroup>
      <Compile Include="Assets\Script\FlyCamera.cs" />
      <Compile Include="Assets\Script\VirtualTexture\Feedback.cs" />
-     <Compile Include="Assets\Script\VirtualTexture\FeedbackReader.cs" />
      <Compile Include="Assets\Script\VirtualTexture\LruCache.cs" />
      <Compile Include="Assets\Script\VirtualTexture\MortonUtility.cs" />
      <Compile Include="Assets\Script\VirtualTexture\PageTable.cs" />
      <Compile Include="Assets\Script\VirtualTexture\PhysicalTexture.cs" />
      <Compile Include="Assets\Script\VirtualTexture\PhysicalTileInfo.cs" />
+     <Compile Include="Assets\Script\VirtualTexture\TableNode.cs" />
      <Compile Include="Assets\Script\VirtualTexture\TileGeneration.cs" />
      <None Include="Assets\Script\Shader\FeedBack.shader" />
      <None Include="Assets\Script\Shader\Unlit.shader" />

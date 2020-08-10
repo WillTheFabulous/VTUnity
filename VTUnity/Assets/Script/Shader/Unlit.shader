@@ -44,7 +44,9 @@ Shader "VirtualTexture/Unlit"
 				float2 finalSampleUV = physicalBaseUV + float2(_TILESIZE * pageRatio.x / float(physicalSize.x), _TILESIZE * pageRatio.y / float(physicalSize.y));
 				//SAMPLE PHYSICAL TEXTURE USING 
 				//float2 finalSampleUV = float2(0.07, 0.9);
-				fixed4 col = tex2D(_PHYSICALTEXTURE0, finalSampleUV);
+				float4 finalSampleUVwithLOD = float4(finalSampleUV,0,0);
+				
+				fixed4 col = tex2Dlod(_PHYSICALTEXTURE0, finalSampleUVwithLOD);
 				/**
 				fixed4 col = fixed4(1, 1, 0, 0);
 				**/
