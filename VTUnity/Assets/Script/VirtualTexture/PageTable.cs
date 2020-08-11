@@ -228,7 +228,6 @@ namespace VirtualTexture
         }
 
 
-        //
         private int UseOrCreatePage(int x, int y, int mip, int frame)
         {
             //print(mip);

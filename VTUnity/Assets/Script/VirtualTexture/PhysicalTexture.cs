@@ -42,7 +42,7 @@ namespace VirtualTexture
             for(int i = 0; i < m_NumTextureType; i++)
             {
                 PhysicalTextures[i] = new RenderTexture(m_PhysicalTextureSize.x * (m_TileSize + 2 * m_PaddingSize), m_PhysicalTextureSize.y * (m_TileSize + 2 * m_PaddingSize), 0);
-                PhysicalTextures[i].filterMode = FilterMode.Trilinear;
+                PhysicalTextures[i].filterMode = FilterMode.Bilinear;
                 PhysicalTextures[i].anisoLevel = 2;
                 PhysicalTextures[i].useMipMap = true;
                 PhysicalTextures[i].autoGenerateMips = false;

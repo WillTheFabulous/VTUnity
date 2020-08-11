@@ -60,6 +60,18 @@ v2f vert(appData v)
 
 }
 
+float getMip(float2 uv){
+
+    float2 texelPos = uv * _PAGETABLESIZE * _TILESIZE; 
+    float2 dx = ddx(texelPos);
+    float2 dy = ddy(texelPos);
+    float rho = max(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
+    float lambda = log2(rho);
+    float mip = max(lambda + 0.5 , 0);
+    return mip;
+
+}
+
 float mod(float  a, float  b)   
 {  
 	return a - b*floor(a / b);   
