@@ -8,6 +8,7 @@ using UnityEngine.Tilemaps;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 using System.Dynamic;
+using UnityEngine.Assertions.Must;
 
 namespace VirtualTexture
 {
@@ -59,16 +60,38 @@ namespace VirtualTexture
 
                 //TODO 更好的texture存储方式？？
             TileGeneratorMat.SetTexture("_AlphaMap", DemoTerrain.terrainData.alphamapTextures[0]);
-            for (int i = 0; i < LayerCount; i++)
+
+            Vector4[] tileInfo = new Vector4[4];
+            
+            for (int i = 0; i < LayerCount && i < 4; i++)
             {
                 TerrainLayer currLayer = DemoTerrain.terrainData.terrainLayers[i];
-                currLayer.diffuseTexture.wrapMode = TextureWrapMode.Clamp;
-                currLayer.normalMapTexture.wrapMode = TextureWrapMode.Clamp;
-                currLayer.diffuseTexture.filterMode = FilterMode.Point;
-                currLayer.normalMapTexture.filterMode = FilterMode.Point;
+
+                /*Texture2D currDiffuse = new Texture2D(currLayer.diffuseTexture.width, currLayer.diffuseTexture.height, TextureFormat.RGBA32, false);
+                //currDiffuse.SetPixels32(currLayer.diffuseTexture.GetPixels32());
+                currDiffuse.wrapMode = TextureWrapMode.Clamp;
+                currDiffuse.filterMode = FilterMode.Bilinear;
+                Graphics.CopyTexture(currLayer.diffuseTexture, currDiffuse);
+                Texture2D currNormal = new Texture2D(currLayer.normalMapTexture.width, currLayer.normalMapTexture.height, TextureFormat.RGBA32, false);
+                currNormal.SetPixels32(currLayer.normalMapTexture.GetPixels32());
+                currNormal.wrapMode = TextureWrapMode.Clamp;
+                currNormal.filterMode = FilterMode.Bilinear;*/
+                currLayer.diffuseTexture.wrapMode = TextureWrapMode.Repeat;
+                currLayer.normalMapTexture.wrapMode = TextureWrapMode.Repeat;
+                currLayer.diffuseTexture.filterMode = FilterMode.Bilinear;
+                currLayer.normalMapTexture.filterMode = FilterMode.Bilinear;
                 TileGeneratorMat.SetTexture("_Diffuse" + i, currLayer.diffuseTexture);
                 TileGeneratorMat.SetTexture("_Normal" + i, currLayer.normalMapTexture);
+                tileInfo[i].x = currLayer.tileSize.x;
+                tileInfo[i].y = currLayer.tileSize.y;
+
+                tileInfo[i].w = currLayer.tileOffset.x;
+                tileInfo[i].z = currLayer.tileOffset.y;
             }
+
+
+            TileGeneratorMat.SetVector("_TerrainSize", DemoTerrain.terrainData.size);
+            TileGeneratorMat.SetVectorArray("_TileInfo", tileInfo);
 
         }
 

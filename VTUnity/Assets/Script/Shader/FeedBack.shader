@@ -21,8 +21,8 @@
             fixed4 frag(v2f i) : SV_Target
             {
                 float2 page = floor(i.uv * _PAGETABLESIZE);
-                int mip = (int)getMip(i.uv);
-                return fixed4(page / 255.0, mip / 255.0, 1);
+                int mip = max((int)getMip(i.uv) - 1, 0);
+                return fixed4(page / 255.0, mip / 255.0, 1);//Alpha can be vt id
 
             }
         
