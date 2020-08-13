@@ -196,7 +196,7 @@ namespace VirtualTexture
 
 
 
-            for(int i = 0; i < 6; i++)
+            for(int i = 0; i < 2; i++)
             {
                 RenderTargetSetup rtsMip = new RenderTargetSetup(colorBuffers, depthBuffer, i, CubemapFace.Unknown);
                 Graphics.SetRenderTarget(rtsMip);

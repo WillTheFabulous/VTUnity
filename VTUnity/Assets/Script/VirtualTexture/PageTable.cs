@@ -150,6 +150,7 @@ namespace VirtualTexture
 
                     if (color.b != 255)
                     {
+                        //print(color.b);
                         UseOrCreatePagePointer(color.r, color.g, color.b, (int)Time.frameCount);
                     }
                 }
@@ -219,7 +220,7 @@ namespace VirtualTexture
                     //跳过白色背景
                     if (color.b != 255)
                     {
-
+                        
                         UseOrCreatePage(color.r, color.g, color.b, p.frame);
                     }
                 }

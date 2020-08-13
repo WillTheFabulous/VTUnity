@@ -47,11 +47,13 @@ Shader "VirtualTexture/Unlit"
 				//float mip = getMip(i.uv);
 				float dx = ddx(finalSampleUV);
 				float dy = ddy(finalSampleUV);
+				
+				
 				//float mipFrac =  1 - frac(mip);
 				//float4 finalSampleUVwithLOD = float4(finalSampleUV,0,0);
 				//SamplerState my_point_clamp_sampler;
 				//fixed4 col = tex2Dlod(_PHYSICALTEXTURE0, finalSampleUVwithLOD);
-				fixed4 col = tex2D(_PHYSICALTEXTURE0, finalSampleUV, dx, dy);
+				fixed4 col = tex2D(_PHYSICALTEXTURE0, finalSampleUV, 0.0, 0.0);
 				
 				return col;
 			}
