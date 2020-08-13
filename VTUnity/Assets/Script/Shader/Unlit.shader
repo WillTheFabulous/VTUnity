@@ -31,7 +31,8 @@ Shader "VirtualTexture/Unlit"
 
 				
 				//COMPUTE PHYSICAL TEXTURE UV FROM TILE X Y
-				float2 physicalSize = (_TILESIZE + 2 *_PADDINGSIZE) * _PHYSICALTEXTURESIZE;
+				float tileSizeWithPadding = _TILESIZE + 2 *_PADDINGSIZE;
+				float2 physicalSize =  tileSizeWithPadding * _PHYSICALTEXTURESIZE;
 
 				float2 physicalPaddingUV = float2(_PADDINGSIZE /  physicalSize.x , _PADDINGSIZE / physicalSize.y);
 				float2 physicalBaseUV = float2(page.r / float(_PHYSICALTEXTURESIZE.x) + physicalPaddingUV.x, page.g / float(_PHYSICALTEXTURESIZE.y) + physicalPaddingUV.y);
@@ -43,13 +44,14 @@ Shader "VirtualTexture/Unlit"
 				//结合physicalBaseUV(已经算上padding)，算出我们在physical texture上应该采的点
 				float2 finalSampleUV = physicalBaseUV + float2(_TILESIZE * pageRatio.x / float(physicalSize.x), _TILESIZE * pageRatio.y / float(physicalSize.y));
 				//SAMPLE PHYSICAL TEXTURE USING 
-				float mip = getMip(i.uv);
-				//mip = clamp(0,_MAXMIP);
-				float mipFrac = 1- frac(mip);
-				float4 finalSampleUVwithLOD = float4(finalSampleUV,0,0);
+				//float mip = getMip(i.uv);
+				float dx = ddx(finalSampleUV);
+				float dy = ddy(finalSampleUV);
+				//float mipFrac =  1 - frac(mip);
+				//float4 finalSampleUVwithLOD = float4(finalSampleUV,0,0);
 				//SamplerState my_point_clamp_sampler;
-				//fixed4 col = SAMPLE_TEXTURE2D_LOD(_PHYSICALTEXTURE0, my_point_clamp_sampler, finalSampleUV, 0);
-				fixed4 col = tex2Dlod(_PHYSICALTEXTURE0, finalSampleUVwithLOD);
+				//fixed4 col = tex2Dlod(_PHYSICALTEXTURE0, finalSampleUVwithLOD);
+				fixed4 col = tex2D(_PHYSICALTEXTURE0, finalSampleUV, dx, dy);
 				
 				return col;
 			}
