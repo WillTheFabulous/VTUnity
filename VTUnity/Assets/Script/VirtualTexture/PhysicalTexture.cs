@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
@@ -16,7 +17,7 @@ namespace VirtualTexture
         public Vector2Int PhysicalTextureSize { get { return m_PhysicalTextureSize; } }
 
         [SerializeField]
-        private int m_TileSize = 256;
+        private int m_TileSize = 128;
 
         [SerializeField]
         private int m_PaddingSize = 4;
@@ -43,7 +44,7 @@ namespace VirtualTexture
             {
                 PhysicalTextures[i] = new RenderTexture(m_PhysicalTextureSize.x * (m_TileSize + 2 * m_PaddingSize), m_PhysicalTextureSize.y * (m_TileSize + 2 * m_PaddingSize), 0);
                 PhysicalTextures[i].filterMode = FilterMode.Trilinear;
-                PhysicalTextures[i].anisoLevel = 9;
+                PhysicalTextures[i].anisoLevel = 8;
                 PhysicalTextures[i].useMipMap = true;
                 PhysicalTextures[i].autoGenerateMips = false;
                 PhysicalTextures[i].wrapMode = TextureWrapMode.Clamp;
@@ -53,6 +54,10 @@ namespace VirtualTexture
             Shader.SetGlobalInt("_TILESIZE", m_TileSize);
             Shader.SetGlobalInt("_PADDINGSIZE", m_PaddingSize);
             Shader.SetGlobalVector("_PHYSICALTEXTURESIZE", new Vector2(m_PhysicalTextureSize.x, m_PhysicalTextureSize.y));
+
+            Vector2Int physicalTexelSize = new Vector2Int((m_TileSize + 2 * m_PaddingSize) * m_PhysicalTextureSize.x, (m_TileSize + 2 * m_PaddingSize) * m_PhysicalTextureSize.y);
+            int physicalMaxSize = (int)Math.Log((double)Math.Min(physicalTexelSize.x, physicalTexelSize.y),2);
+            Shader.SetGlobalInt("_PHYSICALMAXMIP", physicalMaxSize);
 
         }
         

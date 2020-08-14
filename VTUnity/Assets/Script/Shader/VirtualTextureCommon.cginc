@@ -13,6 +13,8 @@ int2 _PHYSICALTEXTURESIZE;
 float3 _TERRAINPOS;
 int3 _TERRAINSIZE;
 
+int _PHYSICALMAXMIP;
+
 
 sampler2D _LOOKUPTEX;
 
@@ -65,9 +67,17 @@ float getMip(float2 uv){
     float2 texelPos = uv * _PAGETABLESIZE * _TILESIZE; 
     float2 dx = ddx(texelPos);
     float2 dy = ddy(texelPos);
+   
     float rho = max(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
     float lambda = log2(rho);
     float mip = max(lambda + 0.5 , 0);
+
+
+    //float px = dot(dx,dx);
+    //float py = dot(dy,dy);
+    //float maxlod = 0.5 * log2( max(px, py) );
+    //float minlod = 0.5 * log2( min(px, py) );
+    //float mip = max(minlod, 0.0);
     return mip;
 
 }

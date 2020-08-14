@@ -31,7 +31,7 @@ Shader "VirtualTexture/Unlit"
 
 				
 				//COMPUTE PHYSICAL TEXTURE UV FROM TILE X Y
-				float tileSizeWithPadding = _TILESIZE + 2 *_PADDINGSIZE;
+				float tileSizeWithPadding = _TILESIZE + 2 * _PADDINGSIZE;
 				float2 physicalSize =  tileSizeWithPadding * _PHYSICALTEXTURESIZE;
 
 				float2 physicalPaddingUV = float2(_PADDINGSIZE /  physicalSize.x , _PADDINGSIZE / physicalSize.y);
@@ -45,15 +45,16 @@ Shader "VirtualTexture/Unlit"
 				float2 finalSampleUV = physicalBaseUV + float2(_TILESIZE * pageRatio.x / float(physicalSize.x), _TILESIZE * pageRatio.y / float(physicalSize.y));
 				//SAMPLE PHYSICAL TEXTURE USING 
 				//float mip = getMip(i.uv);
-				float dx = ddx(finalSampleUV);
-				float dy = ddy(finalSampleUV);
-				
-				
+				//float dx = abs(clamp(0.01 * ddx(finalSampleUV),-0.0001, 0.0001));
+				//float dy = abs(clamp(0.01 * ddy(finalSampleUV),-0.0001, 0.0001));
+
 				//float mipFrac =  1 - frac(mip);
 				//float4 finalSampleUVwithLOD = float4(finalSampleUV,0,0);
 				//SamplerState my_point_clamp_sampler;
 				//fixed4 col = tex2Dlod(_PHYSICALTEXTURE0, finalSampleUVwithLOD);
-				fixed4 col = tex2D(_PHYSICALTEXTURE0, finalSampleUV, 0.0, 0.0);
+
+				float4 finalSampleUVBias = float4(finalSampleUV,0,-_PHYSICALMAXMIP);
+				fixed4 col = tex2Dbias(_PHYSICALTEXTURE0, finalSampleUVBias);
 				
 				return col;
 			}

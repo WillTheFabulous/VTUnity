@@ -37,11 +37,8 @@ namespace VirtualTexture
 
         private Mesh mQuads;
 
-        private Mesh mQuadLowMip;
-
         private LruCache m_TilePool = new LruCache();
 
-        private readonly static object m_Locker = new object();
 
 
         void Start()
@@ -112,6 +109,7 @@ namespace VirtualTexture
             {
                 return;
             }
+            //print("generating page" + Time.frameCount + "  " + TilesToGenerate.Count);
 
             List<int> TilesForMesh = new List<int>();
 
@@ -125,75 +123,12 @@ namespace VirtualTexture
                 TilesToGenerate.RemoveAt(TilesToGenerate.Count - 1);
                 TilesForMesh.Add(quadKey);
             }
+
             SetUpMesh(TilesForMesh);
 
             RenderBuffer[] colorBuffers = new RenderBuffer[1];
             colorBuffers[0] = physicalTexture.PhysicalTextures[0].colorBuffer;
             RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[0].depthBuffer;
-
-           /* //mip 0
-            RenderTargetSetup rtsMip0 = new RenderTargetSetup(colorBuffers, depthBuffer, 0, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip0);
-            CommandBuffer tempCB = new CommandBuffer();
-            tempCB.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCB);
-
-
-            //mip 1
-            RenderTargetSetup rtsMip1 = new RenderTargetSetup(colorBuffers, depthBuffer, 1, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip1);
-            CommandBuffer tempCBLowMip = new CommandBuffer();
-            tempCBLowMip.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip);
-
-            RenderTargetSetup rtsMip2 = new RenderTargetSetup(colorBuffers, depthBuffer, 2, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip2);
-            CommandBuffer tempCBLowMip2 = new CommandBuffer();
-            tempCBLowMip2.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip2);
-
-            RenderTargetSetup rtsMip3 = new RenderTargetSetup(colorBuffers, depthBuffer, 3, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip3);
-            CommandBuffer tempCBLowMip3 = new CommandBuffer();
-            tempCBLowMip3.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip3);
-
-            RenderTargetSetup rtsMip4 = new RenderTargetSetup(colorBuffers, depthBuffer, 4, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip4);
-            CommandBuffer tempCBLowMip4 = new CommandBuffer();
-            tempCBLowMip4.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip4);
-
-            RenderTargetSetup rtsMip5 = new RenderTargetSetup(colorBuffers, depthBuffer, 5, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip5);
-            CommandBuffer tempCBLowMip5 = new CommandBuffer();
-            tempCBLowMip5.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip5);
-
-            RenderTargetSetup rtsMip6 = new RenderTargetSetup(colorBuffers, depthBuffer, 6, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip6);
-            CommandBuffer tempCBLowMip6 = new CommandBuffer();
-            tempCBLowMip6.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip6);
-
-            RenderTargetSetup rtsMip7 = new RenderTargetSetup(colorBuffers, depthBuffer, 7, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip7);
-            CommandBuffer tempCBLowMip7 = new CommandBuffer();
-            tempCBLowMip7.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip7);
-
-            RenderTargetSetup rtsMip8 = new RenderTargetSetup(colorBuffers, depthBuffer, 8, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip8);
-            CommandBuffer tempCBLowMip8 = new CommandBuffer();
-            tempCBLowMip8.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip8);
-
-            RenderTargetSetup rtsMip9 = new RenderTargetSetup(colorBuffers, depthBuffer, 9, CubemapFace.Unknown);
-            Graphics.SetRenderTarget(rtsMip9);
-            CommandBuffer tempCBLowMip9 = new CommandBuffer();
-            tempCBLowMip9.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-            Graphics.ExecuteCommandBuffer(tempCBLowMip9);*/
-
 
 
             for(int i = 0; i < 2; i++)
