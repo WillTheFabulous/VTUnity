@@ -53,17 +53,24 @@ namespace VirtualTexture
 
         public Dictionary<int, int[]> ChildList { get; set; }
 
+        private int m_DebugMode = 0;
+
+        public Dictionary<int, TableNode> m_Pages { get; set; }
+
+        //multiple quad trees 
+        private TableNode[] quadRoots = default;
 
         [SerializeField]
-        private int m_ThreadRectNum = 4;
+        private int m_TerrainDivision = 2;
+
 
         private Thread[] m_Threads = default;
         private readonly static object m_Locker = new object();
-        private CountdownEvent m_CountDownEvent;
+
         private ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
         private ReaderWriterLockSlim rwl2 = new ReaderWriterLockSlim();
 
-        public Dictionary<int, TableNode> m_Pages { get; set; }
+        
 
 
         
@@ -94,16 +101,8 @@ namespace VirtualTexture
             Shader.SetGlobalTexture("_LOOKUPTEX", m_LookupTexture);
             Shader.SetGlobalFloat("_MAXMIP", MaxMipLevel);
             Shader.SetGlobalFloat("_PAGETABLESIZE", TableSize);
+            Shader.SetGlobalInt("_DEBUG", m_DebugMode);
 
-            if(m_ThreadRectNum < 1 )
-            {
-                m_ThreadRectNum = 4;
-            }
-
-
-            m_CountDownEvent = new CountdownEvent(m_ThreadRectNum * m_ThreadRectNum);
-
-            
             tileGenerator = (TileGeneration)GetComponent(typeof(TileGeneration));
             physicalTiles = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             feedBack = (Feedback)GetComponent(typeof(Feedback));
@@ -118,11 +117,38 @@ namespace VirtualTexture
             quadRoot = new TableNode(MaxMipLevel, 0, 0, TableSize, TableSize);
             m_Pages = new Dictionary<int, TableNode>();
 
+            //multiple quad trees
+            quadRoots = new TableNode[m_TerrainDivision * m_TerrainDivision];
+            for(int i = 0; i < m_TerrainDivision; i++)
+            {
+                for (int j = 0; j < m_TerrainDivision; j++) {
+                    //quadRoots[i] = new TableNode(MaxMipLevel, i )
+                }
+            }
+
+
+
         }
 
         void Update()
         {
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                if(m_DebugMode == 0)
+                {
+                    m_DebugMode = 1;
+                }
+                else if(m_DebugMode == 1)
+                {
+                    m_DebugMode = 2;
+                }
+                else
+                {
+                    m_DebugMode = 0;
+                }
+                Shader.SetGlobalInt("_DEBUG", m_DebugMode);
 
+            }
         }
 
 
