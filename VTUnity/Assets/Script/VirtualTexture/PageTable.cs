@@ -119,12 +119,12 @@ namespace VirtualTexture
 
             //multiple quad trees
             quadRoots = new TableNode[m_TerrainDivision * m_TerrainDivision];
-            for(int i = 0; i < m_TerrainDivision; i++)
+            /*for(int i = 0; i < m_TerrainDivision; i++)
             {
                 for (int j = 0; j < m_TerrainDivision; j++) {
                     //quadRoots[i] = new TableNode(MaxMipLevel, i )
                 }
-            }
+            }*/
 
 
 
@@ -156,7 +156,6 @@ namespace VirtualTexture
         private void ProcessFeedback(Texture2D texture)
         {
             //TODO: MAKE UNIQUE PAGE LIST 多线程处理？
-            //TODO: 预生产周边的mip level的tile
 
             //每一帧 我们将当前feedback texture中 还没有被开始生产的tile 扔入生产队列 并在 quadtree 中插入他的信息
 
@@ -164,11 +163,41 @@ namespace VirtualTexture
             int texWidth = texture.width;
             int texHeight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
-
-
-            for (int i = 0; i < texWidth; i += 10)
+            Dictionary<uint,Color32> uniquePages = new Dictionary<uint, Color32>();
+            //MAKE UNIQUE PAGE LIST
+            for (int i = 0; i < texWidth; i++)
             {
-                for (int j = 0; j < texHeight; j += 10)
+                for (int j = 0; j < texHeight; j++)
+                {
+                    int pixelIndex = j * texWidth + i;
+                    var color = textureData[pixelIndex];
+                    //跳过白色背景
+                    if (color.b != 255)
+                    {
+                        uint pixel = ((uint)color.r << 24) | ((uint)color.g << 16) | ((uint)color.r << 8);
+                        if (uniquePages.ContainsKey(pixel))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            uniquePages[pixel] = color;
+                        }
+                    }
+                }
+            }
+            //print(uniquePages.Count);
+
+            foreach(var kv in uniquePages)
+            {
+                var color = kv.Value;
+                UseOrCreatePagePointer(color.r, color.g, color.b, (int)Time.frameCount);
+            }
+
+
+            /*for (int i = 0; i < texWidth; i ++)
+            {
+                for (int j = 0; j < texHeight; j ++)
                 {
                     int pixelIndex = j * texWidth + i;
                     var color = textureData[pixelIndex];
@@ -176,15 +205,13 @@ namespace VirtualTexture
 
                     if (color.b != 255)
                     {
-                        //print(color.b);
                         UseOrCreatePagePointer(color.r, color.g, color.b, (int)Time.frameCount);
                     }
                 }
-            }
+            }*/
 
 
             //Todo 多线程!!!!!!!!!!
-            //TODO garbage collector!!!!!!!!!!!!!!!!!!!!!!!!
 
             /*int threadRectSizeWidth = texWidth / m_ThreadRectNum;
             int threadRectSizeHeight = texHeight / m_ThreadRectNum;
@@ -229,6 +256,91 @@ namespace VirtualTexture
             RefreshLookupTablePointer();
 
 
+        }
+
+
+        private void UseOrCreatePagePointer(int x, int y, int mip, int frame)
+        {
+            if (mip > MaxMipLevel)
+            {
+                mip = MaxMipLevel;
+            }
+
+            var page = quadRoot.GetAvailable(x, y, mip);
+            if (page == null)
+            {
+                CreatePagePointer(x, y, quadRoot);
+            }
+            else
+            {
+                page.Payload.ActiveFrame = frame;
+                tileGenerator.SetActive(page.Payload.TileIndex);
+
+
+                if (page.MipLevel > mip)
+                {
+                    CreatePagePointer(x, y, page.GetChild(x, y));
+                }
+            }
+        }
+
+
+        public void CreatePagePointer(int x, int y, TableNode node)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            if (node.Payload.tileStatus == TileStatus.Loading || node.Payload.tileStatus == TileStatus.LoadingComplete)
+            {
+                return;
+            }
+
+            node.Payload.tileStatus = TileStatus.Loading;
+            int key = getKey(node.Rect.x, node.Rect.y, node.MipLevel);
+            m_Pages[key] = node;
+            tileGenerator.GeneratePageTask(key);
+
+        }
+
+        public void RefreshLookupTablePointer()
+        {
+            var pixels = m_LookupTexture.GetRawTextureData<Color32>();
+            var currentFrame = (byte)Time.frameCount;
+
+
+            foreach (var kv in m_Pages)
+            {
+                TableNode currNode = kv.Value;
+                PhysicalTileInfo currMapping = currNode.Payload;
+
+                if (currMapping.ActiveFrame != Time.frameCount || currMapping.tileStatus != TileStatus.LoadingComplete)
+                {
+                    continue;
+                }
+                int currMip = currNode.MipLevel;
+                Color32 c = new Color32((byte)currMapping.TileIndex.x, (byte)currMapping.TileIndex.y, (byte)currMip, currentFrame);
+
+                for (int x = currNode.Rect.x; x < currNode.Rect.xMax; x++)
+                {
+                    for (int y = currNode.Rect.y; y < currNode.Rect.yMax; y++)
+                    {
+                        var id = y * TableSize + x;
+                        if (pixels[id].b > c.b || pixels[id].a != currentFrame)
+                            pixels[id] = c;
+                    }
+                }
+            }
+            m_LookupTexture.Apply(false);
+        }
+
+        public void OnGenerationCompletePointer(List<int> quadKeys)
+        {
+            foreach (var quadKey in quadKeys)
+            {
+                m_Pages[quadKey].Payload.tileStatus = TileStatus.LoadingComplete;
+            }
         }
 
         private void UseOrCreatePageThread(System.Object obj)
@@ -417,91 +529,6 @@ namespace VirtualTexture
         }
 
 
-        private void UseOrCreatePagePointer(int x, int y, int mip, int frame)
-        {
-            if (mip > MaxMipLevel)
-            {
-                mip = MaxMipLevel;
-            }
-
-            var page = quadRoot.GetAvailable(x, y, mip);
-            if(page == null)
-            {
-                CreatePagePointer(x, y, quadRoot);
-            }
-            else
-            {
-                page.Payload.ActiveFrame = frame;
-                tileGenerator.SetActive(page.Payload.TileIndex);
-
-
-                if (page.MipLevel > mip)
-                {
-                    CreatePagePointer(x,y,page.GetChild(x,y));
-                }
-            }
-        }
-
-
-        public void CreatePagePointer(int x, int y, TableNode node)
-        {
-            if(node == null)
-            {
-                return;
-            }
-
-            if(node.Payload.tileStatus == TileStatus.Loading || node.Payload.tileStatus == TileStatus.LoadingComplete)
-            {
-                return;
-            }
-
-            node.Payload.tileStatus = TileStatus.Loading;
-            int key = getKey(node.Rect.x, node.Rect.y, node.MipLevel);
-            m_Pages[key] = node;
-            tileGenerator.GeneratePageTask(key);
-
-        }
-
-        public void RefreshLookupTablePointer()
-        {
-            var pixels = m_LookupTexture.GetRawTextureData<Color32>();
-            var currentFrame = (byte)Time.frameCount;
-
-
-            foreach (var kv in m_Pages)
-            {
-                TableNode currNode = kv.Value;
-                PhysicalTileInfo currMapping = currNode.Payload;
-
-                if (currMapping.ActiveFrame != Time.frameCount || currMapping.tileStatus != TileStatus.LoadingComplete)
-                {
-                    continue;
-                }
-                int currMip = currNode.MipLevel;
-                Vector2Int pageXY = getPageXY(currMapping.QuadKey);
-                int RectLength = mipRectLengthFromMip(currMip);
-                Color32 c = new Color32((byte)currMapping.TileIndex.x, (byte)currMapping.TileIndex.y, (byte)currMip, currentFrame);
-
-                for (int x = currNode.Rect.x; x < currNode.Rect.xMax; x++)
-                {
-                    for (int y = currNode.Rect.y; y < currNode.Rect.yMax; y++)
-                    {
-                        var id = y * TableSize + x;
-                        if (pixels[id].b > c.b || pixels[id].a != currentFrame)
-                            pixels[id] = c;
-                    }
-                }
-            }
-            m_LookupTexture.Apply(false);
-        }
-
-        public void OnGenerationCompletePointer(List<int> quadKeys)
-        {
-            foreach (var quadKey in quadKeys)
-            {
-                m_Pages[quadKey].Payload.tileStatus = TileStatus.LoadingComplete;
-            }
-        }
 
         public void OnGenerationComplete(List<int> quadKeys)
         {

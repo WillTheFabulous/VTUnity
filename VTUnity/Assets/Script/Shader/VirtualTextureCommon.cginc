@@ -15,6 +15,7 @@ int3 _TERRAINSIZE;
 
 int _PHYSICALMAXMIP;
 int _DEBUG;
+float _FEEDBACKBIAS;
 
 
 sampler2D _LOOKUPTEX;

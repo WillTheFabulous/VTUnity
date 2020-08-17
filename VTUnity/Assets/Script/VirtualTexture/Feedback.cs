@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngineInternal;
+using VirtualTexture;
 
 public class Feedback : MonoBehaviour
 {
@@ -25,9 +26,12 @@ public class Feedback : MonoBehaviour
     [SerializeField]
     private Terrain DemoTerrain = default;
 
+    private PageTable pageTable = default;
+
     // Start is called before the first frame update
     void Start()
     {
+        pageTable = (PageTable)GetComponent(typeof(PageTable));
         InitCamera();
     }
 
@@ -48,36 +52,42 @@ public class Feedback : MonoBehaviour
                 m_ReadbackTexture.wrapMode = TextureWrapMode.Clamp;
             }
 
-            while (m_ReadbackRequests.Count > 0)
+            /*if (SystemInfo.supportsAsyncGPUReadback)
             {
-                var req = m_ReadbackRequests.Peek();
 
-                if (req.hasError)
+                while (m_ReadbackRequests.Count > 0)
                 {
-                    m_ReadbackRequests.Dequeue();
+                    var req = m_ReadbackRequests.Peek();
+
+                    if (req.hasError)
+                    {
+                        m_ReadbackRequests.Dequeue();
+                    }
+                    else if (req.done)
+                    {
+                        m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(req.GetData<Color32>());
+                        complete = true;
+                        m_ReadbackRequests.Dequeue();
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else if (req.done)
+
+                if (complete)
                 {
-                    m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(req.GetData<Color32>());
-                    complete = true;
-                    m_ReadbackRequests.Dequeue();
-                }
-                else
-                {
-                    break;
+                    OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
                 }
             }
+            else
+            {*/
 
-            if (complete)
-            {   /**
-                Color color = m_ReadbackTexture.GetPixel(250,50);
-                print(color.r * 255);
-                print(color.g * 255);
-                print(color.b * 255);
-                print(color.a);
-                **/
+                RenderTexture.active = TargetTexture;
+                Rect rectReadPicture = new Rect(0, 0, width, height);
+                m_ReadbackTexture.ReadPixels(rectReadPicture, 0, 0);
                 OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
-            }
+            //}
         }
 
 
@@ -90,7 +100,7 @@ public class Feedback : MonoBehaviour
 
         if (TargetTexture == null)
         {
-            TargetTexture = new RenderTexture(mainCamera.pixelWidth, mainCamera.pixelHeight, 0);
+            TargetTexture = new RenderTexture(mainCamera.pixelWidth / 8, mainCamera.pixelHeight / 8, 24);
             TargetTexture.useMipMap = false;
             TargetTexture.wrapMode = TextureWrapMode.Clamp;
             TargetTexture.filterMode = FilterMode.Point;
@@ -102,7 +112,9 @@ public class Feedback : MonoBehaviour
 
             Shader.SetGlobalVector("_TERRAINPOS", terrainTransform);
             Shader.SetGlobalVector("_TERRAINSIZE", terrainSize);
-            
+            float feedbackBias =(float)Mathf.Floor( Mathf.Log((float)TargetTexture.width / (float)Mathf.Max((float)mainCamera.pixelWidth, (float)mainCamera.pixelHeight), 2.0f));
+            Shader.SetGlobalFloat("_FEEDBACKBIAS", feedbackBias);
+
 
         }
         m_FeedbackCamera.targetTexture = TargetTexture;
@@ -130,9 +142,11 @@ public class Feedback : MonoBehaviour
 
         // Readback
         //TODO: DOWNSCALE THE TEXTURE? 338847 pixels ??????????
-        
-        var request = AsyncGPUReadback.Request(TargetTexture);
-        m_ReadbackRequests.Enqueue(request);
+        /*if (SystemInfo.supportsAsyncGPUReadback)
+        {
+            var request = AsyncGPUReadback.Request(TargetTexture);
+            m_ReadbackRequests.Enqueue(request);
+        }*/
 
     }
 
@@ -149,7 +163,7 @@ public class Feedback : MonoBehaviour
 
         //白色背景
         m_FeedbackCamera.clearFlags = CameraClearFlags.Color;
-        m_FeedbackCamera.backgroundColor = Color.white;       
+        m_FeedbackCamera.backgroundColor = Color.white; 
     }
 
 

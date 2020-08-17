@@ -361,9 +361,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 040b41afc81e3714aac4f898a75c15d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_PhysicalTextureSize: {x: 20, y: 20}
+  m_PhysicalTextureSize: {x: 24, y: 24}
   m_TileSize: 256
-  m_PaddingSize: 8
+  m_PaddingSize: 4
   m_NumTextureType: 2
 --- !u!1 &1818620057
 GameObject:
@@ -459,15 +459,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4393621799697436, guid: 2e62f5703e5f8d2488a5e1bc8433be41, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 217.8
+      value: 313.324
       objectReference: {fileID: 0}
     - target: {fileID: 4393621799697436, guid: 2e62f5703e5f8d2488a5e1bc8433be41, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 107.46
+      value: 107.959
       objectReference: {fileID: 0}
     - target: {fileID: 4393621799697436, guid: 2e62f5703e5f8d2488a5e1bc8433be41, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 661.97
+      value: 447.456
       objectReference: {fileID: 0}
     - target: {fileID: 4393621799697436, guid: 2e62f5703e5f8d2488a5e1bc8433be41, type: 3}
       propertyPath: m_LocalRotation.x
@@ -516,6 +516,11 @@ PrefabInstance:
     - target: {fileID: 20151819177199186, guid: 2e62f5703e5f8d2488a5e1bc8433be41,
         type: 3}
       propertyPath: m_TargetDisplay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 20151819177199186, guid: 2e62f5703e5f8d2488a5e1bc8433be41,
+        type: 3}
+      propertyPath: m_AllowMSAA
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1563392951960104, guid: 2e62f5703e5f8d2488a5e1bc8433be41, type: 3}
