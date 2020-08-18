@@ -28,7 +28,7 @@
             CGPROGRAM
             #pragma vertex vertDraw
             #pragma fragment frag
-            #pragma target 5.0
+            
       
             #include "VirtualTextureCommon.cginc"
             #include "UnityCG.cginc"
@@ -64,12 +64,60 @@
 
                 fixed4 result = alpha.r * diffuse0 + alpha.g * diffuse1;
                 return result;
-                //return fixed4(1.0,1.0,1.0,1.0);
+
             }
 
 
             ENDCG
         }
+        
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex vertDraw
+            #pragma fragment frag
+      
+            #include "VirtualTextureCommon.cginc"
+            #include "UnityCG.cginc"
+        
+            UNITY_DECLARE_TEX2D(_Normal0);
+            UNITY_DECLARE_TEX2D_NOSAMPLER(_Normal1);
+
+            UNITY_DECLARE_TEX2D(_AlphaMap);
+
+            float3 _TerrainSize;
+            float4 _Diffuse0_ST;
+
+            float4 _TileInfo[4];
+
+            v2f_img vertDraw(appData v){
+                v2f_img o;
+                UNITY_INITIALIZE_OUTPUT(v2f_img, o);
+                o.pos = v.vertex;
+                o.uv = v.texcoord;
+                return o;
+            };
+        
+            fixed4 frag(v2f_img i) : SV_Target
+            {
+                   
+                float4 alpha = UNITY_SAMPLE_TEX2D(_AlphaMap, i.uv);
+
+                float2 normal0UV = float2( frac(i.uv.x / (_TileInfo[0].x / _TerrainSize.x)),  frac(i.uv.y / (_TileInfo[0].y/ _TerrainSize.z) ));
+                float2 normal1UV = float2( frac(i.uv.x / (_TileInfo[1].x / _TerrainSize.x)),  frac(i.uv.y / (_TileInfo[1].y/ _TerrainSize.z) ));
+
+                float4 normal0 = UNITY_SAMPLE_TEX2D(_Normal0, normal0UV);
+                float4 normal1 = UNITY_SAMPLE_TEX2D_SAMPLER(_Normal1, _Normal0, normal1UV);
+
+                fixed4 result = alpha.r * normal0 + alpha.g * normal1;
+                return result;
+
+            }
+
+
+            ENDCG
+        }
+        
     }
     
 }

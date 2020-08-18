@@ -52,7 +52,7 @@ public class Feedback : MonoBehaviour
                 m_ReadbackTexture.wrapMode = TextureWrapMode.Clamp;
             }
 
-            /*if (SystemInfo.supportsAsyncGPUReadback)
+            if (SystemInfo.supportsAsyncGPUReadback)
             {
 
                 while (m_ReadbackRequests.Count > 0)
@@ -81,13 +81,13 @@ public class Feedback : MonoBehaviour
                 }
             }
             else
-            {*/
+            {
 
                 RenderTexture.active = TargetTexture;
                 Rect rectReadPicture = new Rect(0, 0, width, height);
                 m_ReadbackTexture.ReadPixels(rectReadPicture, 0, 0);
                 OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
-            //}
+            }
         }
 
 
@@ -142,11 +142,11 @@ public class Feedback : MonoBehaviour
 
         // Readback
         //TODO: DOWNSCALE THE TEXTURE? 338847 pixels ??????????
-        /*if (SystemInfo.supportsAsyncGPUReadback)
+        if (SystemInfo.supportsAsyncGPUReadback)
         {
             var request = AsyncGPUReadback.Request(TargetTexture);
             m_ReadbackRequests.Enqueue(request);
-        }*/
+        }
 
     }
 

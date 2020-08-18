@@ -2,13 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
-using UnityEditor.Build;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 using System.Dynamic;
-using UnityEngine.Assertions.Must;
 
 namespace VirtualTexture
 {
@@ -46,6 +43,7 @@ namespace VirtualTexture
             TilesToGenerate = new List<int>();
             TileGeneratorMat = new Material(TileGenerator);
             LayerCount = DemoTerrain.terrainData.terrainLayers.Length;
+            print(LayerCount);
 
             physicalTexture = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             pageTable = (PageTable)GetComponent(typeof(PageTable));
@@ -64,15 +62,6 @@ namespace VirtualTexture
             {
                 TerrainLayer currLayer = DemoTerrain.terrainData.terrainLayers[i];
 
-                /*Texture2D currDiffuse = new Texture2D(currLayer.diffuseTexture.width, currLayer.diffuseTexture.height, TextureFormat.RGBA32, false);
-                //currDiffuse.SetPixels32(currLayer.diffuseTexture.GetPixels32());
-                currDiffuse.wrapMode = TextureWrapMode.Clamp;
-                currDiffuse.filterMode = FilterMode.Bilinear;
-                Graphics.CopyTexture(currLayer.diffuseTexture, currDiffuse);
-                Texture2D currNormal = new Texture2D(currLayer.normalMapTexture.width, currLayer.normalMapTexture.height, TextureFormat.RGBA32, false);
-                currNormal.SetPixels32(currLayer.normalMapTexture.GetPixels32());
-                currNormal.wrapMode = TextureWrapMode.Clamp;
-                currNormal.filterMode = FilterMode.Bilinear;*/
                 currLayer.diffuseTexture.wrapMode = TextureWrapMode.Repeat;
                 currLayer.normalMapTexture.wrapMode = TextureWrapMode.Repeat;
                 currLayer.diffuseTexture.filterMode = FilterMode.Bilinear;
@@ -81,7 +70,6 @@ namespace VirtualTexture
                 TileGeneratorMat.SetTexture("_Normal" + i, currLayer.normalMapTexture);
                 tileInfo[i].x = currLayer.tileSize.x;
                 tileInfo[i].y = currLayer.tileSize.y;
-
                 tileInfo[i].w = currLayer.tileOffset.x;
                 tileInfo[i].z = currLayer.tileOffset.y;
             }
@@ -127,19 +115,20 @@ namespace VirtualTexture
             SetUpMesh(TilesForMesh);
 
             RenderBuffer[] colorBuffers = new RenderBuffer[1];
-            colorBuffers[0] = physicalTexture.PhysicalTextures[0].colorBuffer;
-            RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[0].depthBuffer;
 
-
-            for(int i = 0; i < 2; i++)
+            for (int textureType = 0; textureType < physicalTexture.NumTextureType; textureType++)
             {
-                RenderTargetSetup rtsMip = new RenderTargetSetup(colorBuffers, depthBuffer, i, CubemapFace.Unknown);
-                Graphics.SetRenderTarget(rtsMip);
-                CommandBuffer tempCB = new CommandBuffer();
-                tempCB.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
-                Graphics.ExecuteCommandBuffer(tempCB);
+                colorBuffers[0] = physicalTexture.PhysicalTextures[textureType].colorBuffer;
+                RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[textureType].depthBuffer;
+                for (int i = 0; i < 30; i++)
+                {
+                    RenderTargetSetup rtsMip = new RenderTargetSetup(colorBuffers, depthBuffer, i, CubemapFace.Unknown);
+                    Graphics.SetRenderTarget(rtsMip);
+                    CommandBuffer tempCB = new CommandBuffer();
+                    tempCB.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat, 0, textureType);
+                    Graphics.ExecuteCommandBuffer(tempCB);
+                }
             }
-
 
 
 
@@ -183,20 +172,24 @@ namespace VirtualTexture
                 quadUVList.Add(uv2);
                 quadUVList.Add(uv3);
 
-                //TODO????? padding 采图？？
 
 
                 float Width = (float)physicalTexture.PhysicalTextureSize.x;
                 float Height = (float)physicalTexture.PhysicalTextureSize.y;
 
                 Vector2Int tile = RequestTile();
-                SetActive(tile);     
-                //TODO 加tiling
+                SetActive(tile);
+                //TODO 加tiling offset
                 Vector3 vertex0 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y) * 2 / Height - 1, 0.1f);
                 Vector3 vertex1 = new Vector3((tile.x + 1) * 2 / Width - 1, (Height - tile.y) * 2 / Height - 1, 0.1f);
                 Vector3 vertex2 = new Vector3((tile.x + 1) * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1, 0.1f);
-                Vector3 vertex3 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1 , 0.1f);
+                Vector3 vertex3 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1, 0.1f);
 
+
+                /*Vector3 vertex0 = new Vector3(0.3f, 0.3f, 0.1f);
+                Vector3 vertex1 = new Vector3(0.4f, 0.3f, 0.1f);
+                Vector3 vertex2 = new Vector3(0.4f, 0.2f, 0.1f);
+                Vector3 vertex3 = new Vector3(0.3f, 0.2f, 0.1f);*/
 
 
                 quadVertexList.Add(vertex0);

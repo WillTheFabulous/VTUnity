@@ -8,12 +8,7 @@ using System.Numerics;
 using System.Runtime.Serialization.Json;
 using System.Transactions;
 using System.Threading;
-using UnityEditor.Animations;
 using UnityEngine;
-using UnityEngine.Experimental.U2D;
-using UnityEngine.Tilemaps;
-using UnityEngine.UI;
-using UnityEngine.WSA;
 using Unity.Collections;
 using System.Data;
 
@@ -195,21 +190,7 @@ namespace VirtualTexture
             }
 
 
-            /*for (int i = 0; i < texWidth; i ++)
-            {
-                for (int j = 0; j < texHeight; j ++)
-                {
-                    int pixelIndex = j * texWidth + i;
-                    var color = textureData[pixelIndex];
-                    //跳过白色背景
-
-                    if (color.b != 255)
-                    {
-                        UseOrCreatePagePointer(color.r, color.g, color.b, (int)Time.frameCount);
-                    }
-                }
-            }*/
-
+            RefreshLookupTablePointer();
 
             //Todo 多线程!!!!!!!!!!
 
@@ -252,8 +233,6 @@ namespace VirtualTexture
             }*/
 
             //UnityEngine.Profiling.Profiler.EndSample();
-
-            RefreshLookupTablePointer();
 
 
         }

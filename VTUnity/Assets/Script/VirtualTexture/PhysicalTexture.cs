@@ -25,6 +25,8 @@ namespace VirtualTexture
         [SerializeField]
         private int m_NumTextureType = 2;
 
+        public int NumTextureType {get { return m_NumTextureType; } }
+
         //用于存储混好的color normal 等等
         public RenderTexture[] PhysicalTextures { get; private set; }
 
@@ -44,7 +46,7 @@ namespace VirtualTexture
             {
                 PhysicalTextures[i] = new RenderTexture(m_PhysicalTextureSize.x * (m_TileSize + 2 * m_PaddingSize), m_PhysicalTextureSize.y * (m_TileSize + 2 * m_PaddingSize), 0);
                 PhysicalTextures[i].filterMode = FilterMode.Trilinear;
-                PhysicalTextures[i].anisoLevel = 8;
+                PhysicalTextures[i].anisoLevel = 0;
                 PhysicalTextures[i].useMipMap = true;
                 PhysicalTextures[i].autoGenerateMips = false;
                 PhysicalTextures[i].wrapMode = TextureWrapMode.Clamp;
