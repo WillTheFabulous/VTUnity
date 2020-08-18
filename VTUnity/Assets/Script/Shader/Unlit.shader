@@ -53,6 +53,8 @@ Shader "VirtualTexture/Unlit"
 					if (_DEBUG == 0) {
 						float4 finalSampleUVBias = float4(finalSampleUV, 0, -_PHYSICALMAXMIP);
 						col = tex2Dbias(_PHYSICALTEXTURE0, finalSampleUVBias);
+
+						//col = tex2D(_PHYSICALTEXTURE0,finalSampleUV );
 					}
 					else {
 						if (pageRatio.x < 0.05 || pageRatio.y < 0.05 || pageRatio.x > 0.95 || pageRatio.y > 0.95) {

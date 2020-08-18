@@ -20,6 +20,7 @@ public class FlyCamera : MonoBehaviour
     float camSens = 0.25f; //How sensitive it with mouse
     private Vector3 lastMouse = new Vector3(255, 255, 255); //kind of in the middle of the screen, rather than at the top (play)
     private float totalRun = 1.0f;
+    private bool controllerPauseState = false;
 
     void Update()
     {
@@ -60,6 +61,7 @@ public class FlyCamera : MonoBehaviour
         {
             transform.Translate(p);
         }
+        if (Input.GetButtonDown("Cancel")) { ControllerPause(); }
 
     }
 
@@ -83,5 +85,13 @@ public class FlyCamera : MonoBehaviour
             p_Velocity += new Vector3(1, 0, 0);
         }
         return p_Velocity;
+    }
+
+    public void ControllerPause()
+    {
+        controllerPauseState = !controllerPauseState;
+        Cursor.lockState = controllerPauseState ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = controllerPauseState;
+        
     }
 }
