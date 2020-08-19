@@ -1,6 +1,6 @@
 Android
 PlayerPath?
-D:/VTUnity/VT.apk
+C:/netease/VT3.apk
 SceneListBegin?
 Assets/Scenes/SampleScene.unity
 SceneListEnd?
