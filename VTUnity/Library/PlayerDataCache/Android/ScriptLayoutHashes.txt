@@ -1,6 +1,6 @@
 Android
 PlayerPath?
-D:/VTUnity/VT.apk
+D:/素材/VT2.apk
 SceneListBegin?
 Assets/Scenes/SampleScene.unity
 SceneListEnd?
@@ -163,3 +163,6 @@ df434544c9f7b33d1cc7e635b180d279 Unity.TextMeshPro.dll:TMPro.TextMeshPro
 3165968ba45c74472d279ba04455fccb Unity.TextMeshPro.dll:TMPro.TMP_ColorGradient
 8649814970b42d345b89944b862453cc Unity.TextMeshPro.dll:TMPro.TMP_SubMesh
 7e794c0249f975e8d25db040afdd0f86 Assembly-CSharp.dll:VirtualTexture.PhysicalTexture
+ccb25a0a45cf86eff07b1c7dabeb034f Assembly-CSharp.dll:.FreeFlyCamera
+81e982f2c5b68cf6f36e9b6e995514c0 Assembly-CSharp.dll:.ToggleGameObjectEnable
+71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.TouchCamera

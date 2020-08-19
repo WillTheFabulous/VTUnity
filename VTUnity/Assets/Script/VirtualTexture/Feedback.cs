@@ -112,7 +112,7 @@ public class Feedback : MonoBehaviour
 
             Shader.SetGlobalVector("_TERRAINPOS", terrainTransform);
             Shader.SetGlobalVector("_TERRAINSIZE", terrainSize);
-            float feedbackBias =(float)Mathf.Floor( Mathf.Log((float)TargetTexture.width / (float)Mathf.Max((float)mainCamera.pixelWidth, (float)mainCamera.pixelHeight), 2.0f));
+            float feedbackBias =(float)Mathf.Floor(Mathf.Log((float)TargetTexture.width / (float)Mathf.Max((float)mainCamera.pixelWidth, (float)mainCamera.pixelHeight), 2.0f));
             Shader.SetGlobalFloat("_FEEDBACKBIAS", feedbackBias);
 
 

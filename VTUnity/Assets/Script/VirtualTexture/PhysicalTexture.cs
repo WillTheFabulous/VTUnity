@@ -20,7 +20,7 @@ namespace VirtualTexture
         private int m_TileSize = 128;
 
         [SerializeField]
-        private int m_PaddingSize = 4;
+        private int m_PaddingSize = 16;
 
         [SerializeField]
         private int m_NumTextureType = 2;
@@ -46,7 +46,7 @@ namespace VirtualTexture
             {
                 PhysicalTextures[i] = new RenderTexture(m_PhysicalTextureSize.x * (m_TileSize + 2 * m_PaddingSize), m_PhysicalTextureSize.y * (m_TileSize + 2 * m_PaddingSize), 0);
                 PhysicalTextures[i].filterMode = FilterMode.Trilinear;
-                PhysicalTextures[i].anisoLevel = 0;
+                PhysicalTextures[i].anisoLevel = 9;
                 PhysicalTextures[i].useMipMap = true;
                 PhysicalTextures[i].autoGenerateMips = false;
                 PhysicalTextures[i].wrapMode = TextureWrapMode.Clamp;

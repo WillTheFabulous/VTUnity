@@ -88,7 +88,6 @@ namespace VirtualTexture
             }
             quadRootKey = getKey(0, 0, MaxMipLevel);
 
-
             m_LookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false);
             m_LookupTexture.wrapMode = TextureWrapMode.Clamp;
             m_LookupTexture.filterMode = FilterMode.Point;

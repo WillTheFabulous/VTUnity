@@ -65,6 +65,9 @@ v2f vert(appData v)
 }
 
 float getMip(float2 uv){
+    //float tileSizeWithPadding = _TILESIZE + 2 * _PADDINGSIZE;
+    //float2 physicalSize = tileSizeWithPadding * _PHYSICALTEXTURESIZE;
+    //float2 finalSampleUVTexel = float2(uv.x * physicalSize.x, uv.y * physicalSize.y); 
 
     float2 texelPos = uv * _PAGETABLESIZE * _TILESIZE; 
     float2 dx = ddx(texelPos);
@@ -72,7 +75,7 @@ float getMip(float2 uv){
    
     float rho = max(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
     float lambda = log2(rho);
-    float mip = max(lambda + 0.5 , 0);
+    float mip = max(lambda , 0);
 
 
     //float px = dot(dx,dx);

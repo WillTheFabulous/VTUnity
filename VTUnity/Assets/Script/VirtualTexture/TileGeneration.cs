@@ -43,7 +43,6 @@ namespace VirtualTexture
             TilesToGenerate = new List<int>();
             TileGeneratorMat = new Material(TileGenerator);
             LayerCount = DemoTerrain.terrainData.terrainLayers.Length;
-            print(LayerCount);
 
             physicalTexture = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             pageTable = (PageTable)GetComponent(typeof(PageTable));
@@ -120,7 +119,7 @@ namespace VirtualTexture
             {
                 colorBuffers[0] = physicalTexture.PhysicalTextures[textureType].colorBuffer;
                 RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[textureType].depthBuffer;
-                for (int i = 0; i < 30; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     RenderTargetSetup rtsMip = new RenderTargetSetup(colorBuffers, depthBuffer, i, CubemapFace.Unknown);
                     Graphics.SetRenderTarget(rtsMip);
@@ -158,14 +157,11 @@ namespace VirtualTexture
                 float currMipRectLength = 1.0f / (float)Math.Pow(2.0, mipBias);
                 float paddingLength = currMipRectLength * ((float)physicalTexture.PaddingSize / (float)physicalTexture.TileSize);
 
-                //print(paddingLength);
                
                 Vector2 uv0 = new Vector2((float)pageXY.x * rectBaseLength - paddingLength, (float)pageXY.y * rectBaseLength - paddingLength);
                 Vector2 uv1 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength + paddingLength, (float)pageXY.y * rectBaseLength - paddingLength);
                 Vector2 uv2 = new Vector2((float)pageXY.x * rectBaseLength + currMipRectLength + paddingLength, (float)pageXY.y * rectBaseLength + currMipRectLength + paddingLength);
                 Vector2 uv3 = new Vector2((float)pageXY.x * rectBaseLength - paddingLength, (float)pageXY.y * rectBaseLength + currMipRectLength + paddingLength);
-                //print(uv0.x);
-                //print(uv0.y);
 
                 quadUVList.Add(uv0);
                 quadUVList.Add(uv1);
@@ -180,10 +176,29 @@ namespace VirtualTexture
                 Vector2Int tile = RequestTile();
                 SetActive(tile);
                 //TODO 加tiling offset
-                Vector3 vertex0 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y) * 2 / Height - 1, 0.1f);
-                Vector3 vertex1 = new Vector3((tile.x + 1) * 2 / Width - 1, (Height - tile.y) * 2 / Height - 1, 0.1f);
-                Vector3 vertex2 = new Vector3((tile.x + 1) * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1, 0.1f);
-                Vector3 vertex3 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1, 0.1f);
+
+                Vector3 vertex0;
+                Vector3 vertex1;
+                Vector3 vertex2;
+                Vector3 vertex3;
+
+                if (SystemInfo.graphicsDeviceType.ToString().Contains("Direct3D"))
+                {
+                    vertex0 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y) * 2 / Height - 1, 0.1f);
+                    vertex1 = new Vector3((tile.x + 1) * 2 / Width - 1, (Height - tile.y) * 2 / Height - 1, 0.1f);
+                    vertex2 = new Vector3((tile.x + 1) * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1, 0.1f);
+                    vertex3 = new Vector3(tile.x * 2 / Width - 1, (Height - tile.y - 1) * 2 / Height - 1, 0.1f);
+                }
+                else
+                {
+                    vertex0 = new Vector3(tile.x * 2 / Width - 1, tile.y * 2 / Height - 1, 0.1f);
+                    vertex1 = new Vector3((tile.x + 1) * 2 / Width - 1, tile.y * 2 / Height - 1, 0.1f);
+                    vertex2 = new Vector3((tile.x + 1) * 2 / Width - 1, (tile.y + 1) * 2 / Height - 1, 0.1f);
+                    vertex3 = new Vector3(tile.x * 2 / Width - 1, (tile.y + 1) * 2 / Height - 1, 0.1f);
+                }
+
+               
+
 
 
                 /*Vector3 vertex0 = new Vector3(0.3f, 0.3f, 0.1f);
@@ -217,13 +232,16 @@ namespace VirtualTexture
 
                 //Pointer version
 
-                pageTable.m_Pages[quadKey].Payload.TileIndex = tile;
+                
                 int oldQuad;
                 if (physicalTexture.TileToQuadMapping.TryGetValue(tile, out oldQuad))
                 {
+                    pageTable.m_Pages[oldQuad].Payload.tileStatus = TileStatus.Uninitialized;
                     pageTable.m_Pages.Remove(oldQuad);
                 }
                 physicalTexture.TileToQuadMapping[tile] = quadKey;
+
+                pageTable.m_Pages[quadKey].Payload.TileIndex = tile;
 
             }
 
