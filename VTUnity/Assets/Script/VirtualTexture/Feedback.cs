@@ -100,7 +100,7 @@ public class Feedback : MonoBehaviour
 
         if (TargetTexture == null)
         {
-            TargetTexture = new RenderTexture(mainCamera.pixelWidth / 8, mainCamera.pixelHeight / 8, 24);
+            TargetTexture = new RenderTexture(mainCamera.pixelWidth/8 , mainCamera.pixelHeight/8 , 24);
             TargetTexture.useMipMap = false;
             TargetTexture.wrapMode = TextureWrapMode.Clamp;
             TargetTexture.filterMode = FilterMode.Point;

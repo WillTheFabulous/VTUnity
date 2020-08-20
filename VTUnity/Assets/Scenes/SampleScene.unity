@@ -389,7 +389,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_PhysicalTextureSize: {x: 15, y: 15}
   m_TileSize: 256
-  m_PaddingSize: 16
+  m_PaddingSize: 32
   m_NumTextureType: 2
 --- !u!1 &1818620057
 GameObject:
