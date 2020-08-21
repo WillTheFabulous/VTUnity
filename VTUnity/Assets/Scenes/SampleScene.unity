@@ -387,7 +387,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 040b41afc81e3714aac4f898a75c15d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_PhysicalTextureSize: {x: 15, y: 15}
+  m_PhysicalTextureSize: {x: 16, y: 16}
   m_TileSize: 256
   m_PaddingSize: 16
   m_NumTextureType: 2
