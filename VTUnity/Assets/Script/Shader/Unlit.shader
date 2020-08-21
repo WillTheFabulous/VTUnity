@@ -39,8 +39,7 @@ Shader "VirtualTexture/Unlit"
 					float tileSizeWithPadding = _TILESIZE + 2 * _PADDINGSIZE;
 					float2 physicalSize = tileSizeWithPadding * _PHYSICALTEXTURESIZE;
 
-					float2 physicalPaddingUV = float2(_PADDINGSIZE / physicalSize.x , _PADDINGSIZE / physicalSize.y);
-					float2 physicalBaseUV = float2(page.r / float(_PHYSICALTEXTURESIZE.x) + physicalPaddingUV.x, page.g / float(_PHYSICALTEXTURESIZE.y) + physicalPaddingUV.y);
+					float2 physicalBaseUV = float2( (page.r * tileSizeWithPadding + _PADDINGSIZE )/ physicalSize.x , (page.g * tileSizeWithPadding + _PADDINGSIZE) / physicalSize.y);
 
 					//当前mip在uv space中的单块page大小
 					float mipRectLength = 1.0 / exp2(_MAXMIP - page.b);
@@ -51,26 +50,55 @@ Shader "VirtualTexture/Unlit"
 					//SAMPLE PHYSICAL TEXTURE USING 
 					fixed4 col;
 
-					float2 finalSampleUVTexel = float2(finalSampleUV.x * physicalSize.x, finalSampleUV.y * physicalSize.y); 
-					float2 dx = ddx(finalSampleUVTexel);
-					float2 dy = ddy(finalSampleUVTexel);
-					float rho = max(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
-					float lambdaHard = log2(rho);
-					float hardwareMip = max(lambdaHard , 0.0);
-
-					float softwareMip = getMip(i.uv);
-					float targetMip = clamp(softwareMip, page.b, page.b + 3.0) - page.b;
 					
-					float mipBias = targetMip - hardwareMip ;
+					//float2 finalSampleUVTexel = float2(finalSampleUV.x * physicalSize.x, finalSampleUV.y * physicalSize.y); 
+					//float2 dx = ddx(finalSampleUVTexel);
+					//float2 dy = ddy(finalSampleUVTexel);
+					//float rho = max(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
+					//float lambdaHard = log2(rho);
+					//float hardwareMip = max(lambdaHard,0);//max(lambdaHard , 0.0);
+
+					//float softwareMip = getMip(i.uv);
+					//float targetMip = clamp(softwareMip, page.b, page.b + 3.0) - page.b;
+					
+					//float mipBias = targetMip - hardwareMip ;
 
 
-					float floorMip = -floor(hardwareMip);
-					float4 finalSampleUVBias = float4(finalSampleUV, 0, mipBias);
+					//float floorMip = -floor(hardwareMip);
+					//float4 finalSampleUVBias = float4(finalSampleUV, 0, mipBias);
+					
 
+					
+					float2 texelPos = i.uv * _PAGETABLESIZE * _TILESIZE; 
+					float2 dx = ddx(texelPos);
+					float2 dy = ddy(texelPos);
+
+					float dotdx = dot(dx, dx);
+					float dotdy = dot(dy, dy);
+   
+					float rho = min(dotdx, dotdy);
+					float lambda = log2(sqrt(rho));
+					float requiredMip = max(lambda , 0);
+					float mipDelta = clamp(requiredMip, page.b, page.b + 3.0) - page.b;
+					
+					
+					float multiplier = exp2(mipDelta - requiredMip);
+
+					float2 finaldx;
+					float2 finaldy;
+
+					if(rho == dotdx){
+						finaldx = multiplier * dx;
+						finaldy = dy;
+					}else{
+						finaldx = dx;
+						finaldy = multiplier * dy;
+					}
 					
 
 					if (_DEBUG == 0) {
-						col = tex2Dbias(_PHYSICALTEXTURE0, finalSampleUVBias);
+						col = tex2D(_PHYSICALTEXTURE0, finalSampleUV, finaldx, finaldy);
+						//col = tex2Dbias(_PHYSICALTEXTURE0, finalSampleUVBias);
 						//col = tex2D(_PHYSICALTEXTURE0,finalSampleUV );
 					}
 					else {
@@ -78,7 +106,8 @@ Shader "VirtualTexture/Unlit"
 							col = fixed4(page.b * 0.1, 0.0, 0.0, 1);
 						}
 						else {
-							col = tex2Dbias(_PHYSICALTEXTURE0, finalSampleUVBias);
+							col = tex2D(_PHYSICALTEXTURE0, finalSampleUV, finaldx, finaldy);
+							//col = tex2Dbias(_PHYSICALTEXTURE0, finalSampleUVBias);
 						}
 					}
 

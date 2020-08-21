@@ -197,14 +197,7 @@ namespace VirtualTexture
                     vertex3 = new Vector3(tile.x * 2 / Width - 1, (tile.y + 1) * 2 / Height - 1, 0.1f);
                 }
 
-               
 
-
-
-                /*Vector3 vertex0 = new Vector3(0.3f, 0.3f, 0.1f);
-                Vector3 vertex1 = new Vector3(0.4f, 0.3f, 0.1f);
-                Vector3 vertex2 = new Vector3(0.4f, 0.2f, 0.1f);
-                Vector3 vertex3 = new Vector3(0.3f, 0.2f, 0.1f);*/
 
 
                 quadVertexList.Add(vertex0);
