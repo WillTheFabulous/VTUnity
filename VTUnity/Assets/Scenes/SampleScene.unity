@@ -391,6 +391,7 @@ MonoBehaviour:
   m_TileSize: 256
   m_PaddingSize: 32
   m_NumTextureType: 2
+  m_AnisoLevel: 9
 --- !u!1 &1818620057
 GameObject:
   m_ObjectHideFlags: 0

@@ -70,7 +70,7 @@ float getMip(float2 uv){
     float2 dx = ddx(texelPos);
     float2 dy = ddy(texelPos);
    
-    float rho = max(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
+    float rho = min(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
     float lambda = log2(rho);
     float mip = max(lambda , 0);
 

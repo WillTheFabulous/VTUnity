@@ -25,6 +25,9 @@ namespace VirtualTexture
         [SerializeField]
         private int m_NumTextureType = 2;
 
+        [SerializeField]
+        private int m_AnisoLevel = default;
+
         public int NumTextureType {get { return m_NumTextureType; } }
 
         //用于存储混好的color normal 等等
@@ -42,11 +45,12 @@ namespace VirtualTexture
         {
             PhysicalTextures = new RenderTexture[m_NumTextureType];
             TileToQuadMapping = new Dictionary<Vector2Int, int>();
+            m_AnisoLevel = Mathf.Clamp(m_AnisoLevel, 0, 9);
             for(int i = 0; i < m_NumTextureType; i++)
             {
                 PhysicalTextures[i] = new RenderTexture(m_PhysicalTextureSize.x * (m_TileSize + 2 * m_PaddingSize), m_PhysicalTextureSize.y * (m_TileSize + 2 * m_PaddingSize), 0);
                 PhysicalTextures[i].filterMode = FilterMode.Trilinear;
-                PhysicalTextures[i].anisoLevel = 8;
+                PhysicalTextures[i].anisoLevel = m_AnisoLevel;
                 PhysicalTextures[i].useMipMap = true;
                 PhysicalTextures[i].autoGenerateMips = false;
                 PhysicalTextures[i].wrapMode = TextureWrapMode.Clamp;
