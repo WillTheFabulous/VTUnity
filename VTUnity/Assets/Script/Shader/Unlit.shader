@@ -51,7 +51,7 @@ Shader "VirtualTexture/Unlit"
 					fixed4 col;
 
 					
-					//float2 finalSampleUVTexel = float2(finalSampleUV.x * physicalSize.x, finalSampleUV.y * physicalSize.y); 
+					float2 finalSampleUVTexel = float2(finalSampleUV.x * physicalSize.x, finalSampleUV.y * physicalSize.y); 
 					//float2 dx = ddx(finalSampleUVTexel);
 					//float2 dy = ddy(finalSampleUVTexel);
 					//float rho = max(sqrt(dot(dx, dx)), sqrt(dot(dy, dy)));
@@ -67,19 +67,16 @@ Shader "VirtualTexture/Unlit"
 					//float floorMip = -floor(hardwareMip);
 					//float4 finalSampleUVBias = float4(finalSampleUV, 0, mipBias);
 					
-
-					
-					float2 texelPos = i.uv * _PAGETABLESIZE * _TILESIZE; 
-					float2 dx = ddx(texelPos);
-					float2 dy = ddy(texelPos);
-
+					//float rho = min(dotdx, dotdy);
+					//float lambda = log2(sqrt(rho));
+					//float requiredMip = max(lambda , 0);
+					float vtSize = _PAGETABLESIZE * _TILESIZE;
+					float2 dx = (vtSize / physicalSize.x) * ddx(i.uv);
+					float2 dy = (vtSize / physicalSize.y) * ddy(i.uv);
 					float dotdx = dot(dx, dx);
 					float dotdy = dot(dy, dy);
-   
-					float rho = min(dotdx, dotdy);
-					float lambda = log2(sqrt(rho));
-					float requiredMip = max(lambda , 0);
-					float mipDelta = clamp(requiredMip, page.b, page.b + 3.0) - page.b;
+					float requiredMip = getMip(i.uv);
+					float mipDelta = clamp(requiredMip, page.b, page.b + 2.0) - page.b;
 					
 					
 					float multiplier = exp2(mipDelta - requiredMip);
@@ -87,14 +84,18 @@ Shader "VirtualTexture/Unlit"
 					float2 finaldx;
 					float2 finaldy;
 
-					if(rho == dotdx){
+					finaldx = multiplier * dx;
+					finaldy = multiplier * dy;
+
+					/*if(dotdx < dotdy){
 						finaldx = multiplier * dx;
 						finaldy = dy;
 					}else{
 						finaldx = dx;
 						finaldy = multiplier * dy;
-					}
-					
+					}*/
+
+
 
 					if (_DEBUG == 0) {
 						col = tex2D(_PHYSICALTEXTURE0, finalSampleUV, finaldx, finaldy);

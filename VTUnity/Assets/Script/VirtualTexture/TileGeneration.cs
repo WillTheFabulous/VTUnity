@@ -119,7 +119,7 @@ namespace VirtualTexture
             {
                 colorBuffers[0] = physicalTexture.PhysicalTextures[textureType].colorBuffer;
                 RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[textureType].depthBuffer;
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < 7; i++)
                 {
                     RenderTargetSetup rtsMip = new RenderTargetSetup(colorBuffers, depthBuffer, i, CubemapFace.Unknown);
                     Graphics.SetRenderTarget(rtsMip);
