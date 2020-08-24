@@ -158,6 +158,8 @@ namespace VirtualTexture
             int texHeight = texture.height;
             var textureData = texture.GetRawTextureData<Color32>();
             Dictionary<uint,Color32> uniquePages = new Dictionary<uint, Color32>();
+
+            UnityEngine.Profiling.Profiler.BeginSample("UniquePageList");
             //MAKE UNIQUE PAGE LIST
             for (int i = 0; i < texWidth; i++)
             {
@@ -181,12 +183,18 @@ namespace VirtualTexture
                 }
             }
             //print(uniquePages.Count);
+            UnityEngine.Profiling.Profiler.EndSample();
 
-            foreach(var kv in uniquePages)
+
+            UnityEngine.Profiling.Profiler.BeginSample("UseOrCreatePage");
+
+            foreach (var kv in uniquePages)
             {
                 var color = kv.Value;
                 UseOrCreatePagePointer(color.r, color.g, color.b, (int)Time.frameCount);
             }
+            UnityEngine.Profiling.Profiler.EndSample();
+
 
 
             RefreshLookupTablePointer();

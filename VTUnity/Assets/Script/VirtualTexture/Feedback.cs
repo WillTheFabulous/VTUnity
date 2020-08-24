@@ -100,7 +100,7 @@ public class Feedback : MonoBehaviour
 
         if (TargetTexture == null)
         {
-            TargetTexture = new RenderTexture(mainCamera.pixelWidth/8 , mainCamera.pixelHeight/8 , 24);
+            TargetTexture = new RenderTexture(mainCamera.pixelWidth/12, mainCamera.pixelHeight/12 , 24);
             TargetTexture.useMipMap = false;
             TargetTexture.wrapMode = TextureWrapMode.Clamp;
             TargetTexture.filterMode = FilterMode.Point;
@@ -120,7 +120,6 @@ public class Feedback : MonoBehaviour
         m_FeedbackCamera.targetTexture = TargetTexture;
 
 
-        //var mainCamera = Camera.main;
         m_FeedbackCamera.transform.position = mainCamera.transform.position;
         m_FeedbackCamera.transform.rotation = mainCamera.transform.rotation;
         m_FeedbackCamera.cullingMask = mainCamera.cullingMask;

@@ -34,7 +34,7 @@ namespace VirtualTexture
 
         private Mesh mQuads;
 
-        private LruCache m_TilePool = new LruCache();
+        private LruCache m_TilePool = default;
 
 
 
@@ -47,6 +47,7 @@ namespace VirtualTexture
             physicalTexture = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             pageTable = (PageTable)GetComponent(typeof(PageTable));
 
+            m_TilePool = new LruCache(pageTable.MaxMipLevel);
             for (int i = 0; i < physicalTexture.PhysicalTextureSize.x * physicalTexture.PhysicalTextureSize.y; i++)
             {
                 m_TilePool.Add(i);
@@ -119,7 +120,7 @@ namespace VirtualTexture
             {
                 colorBuffers[0] = physicalTexture.PhysicalTextures[textureType].colorBuffer;
                 RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[textureType].depthBuffer;
-                for (int i = 0; i < 7; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     RenderTargetSetup rtsMip = new RenderTargetSetup(colorBuffers, depthBuffer, i, CubemapFace.Unknown);
                     Graphics.SetRenderTarget(rtsMip);
