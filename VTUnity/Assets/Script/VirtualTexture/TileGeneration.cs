@@ -47,11 +47,7 @@ namespace VirtualTexture
             physicalTexture = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             pageTable = (PageTable)GetComponent(typeof(PageTable));
 
-            m_TilePool = new LruCache(pageTable.MaxMipLevel);
-            for (int i = 0; i < physicalTexture.PhysicalTextureSize.x * physicalTexture.PhysicalTextureSize.y; i++)
-            {
-                m_TilePool.Add(i);
-            }
+            m_TilePool = new LruCache(pageTable.MaxMipLevel, physicalTexture.PhysicalTextureSize.x, physicalTexture.PhysicalTextureSize.y);
 
                 //TODO 更好的texture存储方式？？
             TileGeneratorMat.SetTexture("_AlphaMap", DemoTerrain.terrainData.alphamapTextures[0]);
@@ -174,8 +170,8 @@ namespace VirtualTexture
                 float Width = (float)physicalTexture.PhysicalTextureSize.x;
                 float Height = (float)physicalTexture.PhysicalTextureSize.y;
 
-                Vector2Int tile = RequestTile();
-                SetActive(tile);
+                Vector2Int tile = m_TilePool.RequestTile(mip);
+                //SetActive(tile);
                 //TODO 加tiling offset
 
                 Vector3 vertex0;
@@ -247,27 +243,11 @@ namespace VirtualTexture
 
         public bool SetActive(Vector2Int tile)
         {
-            bool success = m_TilePool.SetActive(PosToId(tile));
+            bool success = m_TilePool.SetActive(tile);
 
             return success;
         }
 
-
-        public Vector2Int RequestTile()
-        {
-            return IdToPos(m_TilePool.First);
-        }
-
-
-        private Vector2Int IdToPos(int id)
-        {
-            return new Vector2Int(id % physicalTexture.PhysicalTextureSize.x, id / physicalTexture.PhysicalTextureSize.x);
-        }
-
-        private int PosToId(Vector2Int tile)
-        {
-            return (tile.y * physicalTexture.PhysicalTextureSize.x + tile.x);
-        }
 
         // Update is called once per frame
         void Update()
