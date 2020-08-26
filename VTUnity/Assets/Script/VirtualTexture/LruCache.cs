@@ -9,10 +9,13 @@ namespace VirtualTexture
     {
         private Dictionary<int, LinkedListNode<int>> m_Map = new Dictionary<int, LinkedListNode<int>>();
 
+
+        /*
+         *  Head |   mip0     | mip1 |     mip3    |        mip4          | Tail
+         *  保证低mip的tile被优先替出
+         */
         private LinkedList<int> m_List = new LinkedList<int>();
 
-
-        //保证最先替出mip最低的tile
         //每个mip list的结尾
         private LinkedListNode<int>[] m_MipEnd = default;
 
@@ -26,11 +29,14 @@ namespace VirtualTexture
 
         public int First { get { return m_List.First.Value; } }
 
+        private PhysicalTexture physicalTexture = default;
 
-        public LruCache(int maxMip, int physicalSizeX, int physicalSizeY)
+        private PageTable pageTable = default;
+
+        public LruCache(int maxMip, int physicalSizeX, int physicalSizeY, PhysicalTexture physical, PageTable table)
         {
             m_MipEnd = new LinkedListNode<int>[maxMip + 1];
-            m_MipEnd[0] = m_List.Last;
+            
             m_NumMip = new int[maxMip + 1];
             for(int i = 0; i < maxMip + 1; i ++)
             {
@@ -42,7 +48,12 @@ namespace VirtualTexture
             {
                 Add(i);
             }
-            
+            //将mip 0 list的结尾放到list 的最后，其他mip list 结尾暂时为null
+            m_MipEnd[0] = m_List.Last;
+
+            physicalTexture = physical;
+            pageTable = table;
+
         }
         public void Add(int id)
         {
@@ -58,63 +69,86 @@ namespace VirtualTexture
         public bool SetActive(Vector2Int tile)
         {
             int id = PosToId(tile);
-            int mip = m_IdToMip[id];
+
             LinkedListNode<int> node = null;
             if (!m_Map.TryGetValue(id, out node))
                 return false;
 
-            if (node == m_MipEnd[mip])
-            {
-                return true;
-            }
-            m_List.Remove(node);
+            //int mip = m_IdToMip[id];
+            //if (m_MipEnd[mip] == null)
+            //{
+            //    if (mip == 0) //mip 0 为 null只可能是已满替换后的结果
+            //    {
+            //        m_MipEnd[mip] = node;
+            //        return true;
+            //    }
+            //    else
+            //    {
+            //        int tempMip = mip - 1;
+            //        //发现mip list结尾为null，还不存在当前mip的list，往前寻找低mip的结尾
+            //        while (tempMip >= 0)
+            //        {
+            //            if (m_MipEnd[tempMip] != null)
+            //            {
+            //                m_MipEnd[mip] = m_MipEnd[tempMip];
+            //                break;
+            //            }
+            //            tempMip--;
+            //        }
 
-            m_List.AddAfter(m_MipEnd[mip],node);
+            //        //大于等于0的mip end 都是空的
+            //        if (m_MipEnd[mip] == null)
+            //        {
+            //            m_MipEnd[mip] = node;
+            //            return true;
+            //        }
+            //    }
+            //}
+
+            //if (node == m_MipEnd[mip])
+            //{
+            //    return true;
+            //}
+            m_List.Remove(node);
+            m_List.AddLast(node);
+            //m_List.AddAfter(m_MipEnd[mip],node);
+
+            //m_MipEnd[mip] = node;
 
             return true;
         }
 
-        public Vector2Int RequestTile(int targetMip)
+        public Vector2Int RequestTile(int targetMip, int frame)
         {
-            int oldMip = m_IdToMip[First];
+            LinkedListNode<int> node = m_List.First;
             Vector2Int tile = IdToPos(First);
+            //int oldQuad;
+            //while (physicalTexture.TileToQuadMapping.TryGetValue(tile, out oldQuad) && (pageTable.m_Pages[oldQuad].Payload.tileStatus == TileStatus.Loading || pageTable.m_Pages[oldQuad].Payload.ActiveFrame == frame))
+            //{
+            //    node = node.Next;
+            //    tile = IdToPos(node.Value);
+            //}
+            //int oldMip = m_IdToMip[node.Value];
 
-            if (oldMip != -1 && oldMip != targetMip)
-            {
-                m_NumMip[oldMip]--;
-                if (m_NumMip[oldMip] == 0)
-                {
-                    if (oldMip == 0)
-                    {
-                        m_MipEnd[oldMip] = m_List.Last;
-                    }
-                    else
-                    {
-                        m_MipEnd[oldMip] = null;
-                    }
-                }
-            }
+            //UnityEngine.Debug.Log("Request Tile");
+            ////UnityEngine.Debug.Log(m_NumMip[0]);
+            //UnityEngine.Debug.Log("old mip is " + oldMip);
+            //UnityEngine.Debug.Log("first mip is" + m_IdToMip[First]);
+            //UnityEngine.Debug.Log(m_MipEnd[0] == m_List.Last);
 
-            if(m_MipEnd[targetMip] == null)
-            {
-                int tempMip = targetMip - 1;
-                while(tempMip >= 0)
-                {
-                    if(m_MipEnd[tempMip] != null)
-                    {
-                        m_MipEnd[targetMip] = m_MipEnd[tempMip];
-                        break;
-                    }
-                    tempMip--;
-                }
-                if (tempMip < 0)
-                {
-                    m_MipEnd[targetMip] = m_List.Last;
-                }
-            }
 
-            m_NumMip[targetMip]++;
-            m_IdToMip[First] = targetMip;
+
+            //if (oldMip != -1 && oldMip != targetMip)
+            //{
+            //    m_NumMip[oldMip] = m_NumMip[oldMip] - 1;
+            //    m_NumMip[targetMip] = m_NumMip[targetMip] + 1;
+            //    if (m_NumMip[oldMip] == 0)
+            //    {
+            //        m_MipEnd[oldMip] = null;
+            //    }
+            //}
+
+            //m_IdToMip[node.Value] = targetMip;
 
             SetActive(tile);
 

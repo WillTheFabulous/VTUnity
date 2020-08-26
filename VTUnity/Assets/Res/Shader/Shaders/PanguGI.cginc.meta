@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 9c29ff769c3727d448e2d733d8b85870
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: shader/shaders/pangugi.cginc
+  assetBundleVariant: nm

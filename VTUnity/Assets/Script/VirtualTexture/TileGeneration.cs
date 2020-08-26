@@ -47,7 +47,8 @@ namespace VirtualTexture
             physicalTexture = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
             pageTable = (PageTable)GetComponent(typeof(PageTable));
 
-            m_TilePool = new LruCache(pageTable.MaxMipLevel, physicalTexture.PhysicalTextureSize.x, physicalTexture.PhysicalTextureSize.y);
+            m_TilePool = new LruCache(pageTable.MaxMipLevel, physicalTexture.PhysicalTextureSize.x, physicalTexture.PhysicalTextureSize.y, physicalTexture, pageTable);
+
 
                 //TODO 更好的texture存储方式？？
             TileGeneratorMat.SetTexture("_AlphaMap", DemoTerrain.terrainData.alphamapTextures[0]);
@@ -101,7 +102,7 @@ namespace VirtualTexture
             TilesToGenerate.Sort((x,y) => { return MortonUtility.getMip(x).CompareTo(MortonUtility.getMip(y)); });
 
             //一次最多贴5个
-            for (int i = 0; i < 5 && TilesToGenerate.Count > 0; i++)
+            for (int i = 0; TilesToGenerate.Count > 0; i++)
             {
                 int quadKey = TilesToGenerate[TilesToGenerate.Count - 1];
                 TilesToGenerate.RemoveAt(TilesToGenerate.Count - 1);
@@ -170,7 +171,7 @@ namespace VirtualTexture
                 float Width = (float)physicalTexture.PhysicalTextureSize.x;
                 float Height = (float)physicalTexture.PhysicalTextureSize.y;
 
-                Vector2Int tile = m_TilePool.RequestTile(mip);
+                Vector2Int tile = m_TilePool.RequestTile(mip, Time.frameCount);
                 //SetActive(tile);
                 //TODO 加tiling offset
 

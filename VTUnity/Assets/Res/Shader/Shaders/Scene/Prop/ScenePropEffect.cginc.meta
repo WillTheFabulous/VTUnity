@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 1d1324c0ae7ff0343a53a249c008e7fd
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: shader/shaders/scene/prop/scenepropeffect.cginc
+  assetBundleVariant: nm

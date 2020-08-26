@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: b001b309503c1ce4c84f29d81cf07569
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: shader/shaders/pangusoftshadow.cginc
+  assetBundleVariant: nm

@@ -53,10 +53,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\FirstPersion AIO Pack\DemoScene\MiscScripts\Doors.cs" />
-     <Compile Include="Assets\FirstPersion AIO Pack\FirstPersonAIO\FirstPersonAIO.cs" />
      <Compile Include="Assets\FreeFlyCamera\Demo\Scripts\ToggleGameObjectEnable.cs" />
      <Compile Include="Assets\FreeFlyCamera\Scripts\FreeFlyCamera.cs" />
+     <Compile Include="Assets\Res\Script\ResRefConst.cs" />
+     <Compile Include="Assets\Res\Script\WeatherConst.cs" />
+     <Compile Include="Assets\Res\Script\WeatherDefault.cs" />
      <Compile Include="Assets\Script\FlyCamera.cs" />
      <Compile Include="Assets\Script\VirtualTexture\Feedback.cs" />
      <Compile Include="Assets\Script\VirtualTexture\LruCache.cs" />
@@ -67,12 +68,17 @@
      <Compile Include="Assets\Script\VirtualTexture\TableNode.cs" />
      <Compile Include="Assets\Script\VirtualTexture\TileGeneration.cs" />
      <Compile Include="Assets\Scripts\Camera\TouchCamera.cs" />
+     <None Include="Assets\Res\Shader\Shaders\Scene\Prop\ScenePropEffect.cginc" />
      <None Include="Assets\Script\Shader\FeedBack.shader" />
      <None Include="Assets\Script\Shader\Unlit.shader" />
+     <None Include="Assets\Res\Shader\Shaders\Scene\Terrain\TerrainBlendPBR.shader" />
      <None Include="Assets\Script\Shader\VirtualTextureCommon.cginc" />
-     <None Include="Assets\FirstPersion AIO Pack\DemoScene\Working Materials\GlassBumpedDistort.shader" />
+     <None Include="Assets\Res\Shader\Shaders\PanguGI.cginc" />
+     <None Include="Assets\Res\Shader\Shaders\PanguCommon.cginc" />
+     <None Include="Assets\Res\Shader\Shaders\Scene\Terrain\TerrainCommon.cginc" />
+     <None Include="Assets\Res\Shader\Shaders\PanguSoftShadow.cginc" />
+     <None Include="Assets\Res\Shader\Shaders\PanguCustomPBSLighting.cginc" />
      <None Include="Assets\Script\Shader\TileGeneration.shader" />
-     <None Include="Assets\FirstPersion AIO Pack\README.txt" />
      <None Include="Assets\FreeFlyCamera\readme.txt" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>D:/VTUnity/VTUnity/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>

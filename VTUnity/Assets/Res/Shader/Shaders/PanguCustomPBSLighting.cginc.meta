@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 9f29f5d90ef2d6245989de9b5a07310e
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: shader/shaders/pangucustompbslighting.cginc
+  assetBundleVariant: nm
