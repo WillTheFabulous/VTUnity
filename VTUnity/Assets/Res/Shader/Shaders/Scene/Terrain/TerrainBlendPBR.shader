@@ -131,6 +131,7 @@ Properties{
 //####LOW End####
 
         #pragma target 3.0
+        #pragma enable_d3d11_debug_symbols
         #pragma multi_compile _ SHADERBATCH_INSTANCING_ON
         #pragma instancing_options nolightmap
         #pragma multi_compile _ _RAINMAP _CAUSTICS

@@ -65,6 +65,7 @@ namespace VirtualTexture
         private ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
         private ReaderWriterLockSlim rwl2 = new ReaderWriterLockSlim();
 
+        public bool InCoroutine {get; set;}
         
 
 
@@ -104,7 +105,8 @@ namespace VirtualTexture
             AddressMapping = new Dictionary<int, PhysicalTileInfo>();
             ChildList = new Dictionary<int, int[]>();
 
-            feedBack.OnFeedbackReadComplete += ProcessFeedback;
+            feedBack.OnFeedbackReadComplete += ProcessFeedbackCoroutine;
+            InCoroutine = false;
             //tileGenerator.OnTileGenerationComplete += OnGenerationComplete;
             tileGenerator.OnTileGenerationComplete += OnGenerationCompletePointer;
             //FOR POINTER
@@ -145,9 +147,14 @@ namespace VirtualTexture
             }
         }
 
+        private void ProcessFeedbackCoroutine(Texture2D texture)
+        {
+            InCoroutine = true;
+            StartCoroutine(ProcessFeedback(texture));
+        }
 
 
-        private void ProcessFeedback(Texture2D texture)
+        private IEnumerator ProcessFeedback(Texture2D texture)
         {
             //TODO: MAKE UNIQUE PAGE LIST 多线程处理？
 
@@ -159,7 +166,7 @@ namespace VirtualTexture
             var textureData = texture.GetRawTextureData<Color32>();
             Dictionary<uint,Color32> uniquePages = new Dictionary<uint, Color32>();
 
-            UnityEngine.Profiling.Profiler.BeginSample("UniquePageList");
+            
             //MAKE UNIQUE PAGE LIST
             for (int i = 0; i < texWidth; i++)
             {
@@ -180,24 +187,38 @@ namespace VirtualTexture
                             uniquePages[pixel] = color;
                         }
                     }
+
+                    if (i == texWidth / 2 && j == texHeight / 2)
+                    {
+                        yield return null;
+                    }
                 }
             }
             //print(uniquePages.Count);
-            UnityEngine.Profiling.Profiler.EndSample();
+
+            yield return null;
 
 
-            UnityEngine.Profiling.Profiler.BeginSample("UseOrCreatePage");
 
+            int pageCount = 0;
+            int numPage = uniquePages.Count;
+            int targetFrame = (int)Time.frameCount + 1;
             foreach (var kv in uniquePages)
             {
                 var color = kv.Value;
-                UseOrCreatePagePointer(color.r, color.g, color.b, (int)Time.frameCount);
+                UseOrCreatePagePointer(color.r, color.g, color.b, (int)targetFrame);
+                if (pageCount == numPage / 2)
+                {
+                    yield return null;
+                }
+                pageCount++;
             }
-            UnityEngine.Profiling.Profiler.EndSample();
+
 
 
 
             RefreshLookupTablePointer();
+            InCoroutine = false;
 
             //Todo 多线程!!!!!!!!!!
 

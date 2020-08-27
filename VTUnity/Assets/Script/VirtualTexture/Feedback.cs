@@ -51,42 +51,45 @@ public class Feedback : MonoBehaviour
                 m_ReadbackTexture.filterMode = FilterMode.Point;
                 m_ReadbackTexture.wrapMode = TextureWrapMode.Clamp;
             }
-
-            if (SystemInfo.supportsAsyncGPUReadback)
+            if (!pageTable.InCoroutine)
             {
-
-                while (m_ReadbackRequests.Count > 0)
+                if (SystemInfo.supportsAsyncGPUReadback)
                 {
-                    var req = m_ReadbackRequests.Peek();
 
-                    if (req.hasError)
+                    while (m_ReadbackRequests.Count > 0)
                     {
-                        m_ReadbackRequests.Dequeue();
+                        var req = m_ReadbackRequests.Peek();
+
+                        if (req.hasError)
+                        {
+                            m_ReadbackRequests.Dequeue();
+                        }
+                        else if (req.done)
+                        {
+                            m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(req.GetData<Color32>());
+                            complete = true;
+                            m_ReadbackRequests.Dequeue();
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else if (req.done)
+
+                    if (complete)
                     {
-                        m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(req.GetData<Color32>());
-                        complete = true;
-                        m_ReadbackRequests.Dequeue();
-                    }
-                    else
-                    {
-                        break;
+
+                        OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
                     }
                 }
-
-                if (complete)
+                else
                 {
+
+                    RenderTexture.active = TargetTexture;
+                    Rect rectReadPicture = new Rect(0, 0, width, height);
+                    m_ReadbackTexture.ReadPixels(rectReadPicture, 0, 0);
                     OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
                 }
-            }
-            else
-            {
-
-                RenderTexture.active = TargetTexture;
-                Rect rectReadPicture = new Rect(0, 0, width, height);
-                m_ReadbackTexture.ReadPixels(rectReadPicture, 0, 0);
-                OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
             }
         }
 
@@ -141,7 +144,7 @@ public class Feedback : MonoBehaviour
 
         // Readback
         //TODO: DOWNSCALE THE TEXTURE? 338847 pixels ??????????
-        if (SystemInfo.supportsAsyncGPUReadback)
+        if (SystemInfo.supportsAsyncGPUReadback && !pageTable.InCoroutine)
         {
             var request = AsyncGPUReadback.Request(TargetTexture);
             m_ReadbackRequests.Enqueue(request);
