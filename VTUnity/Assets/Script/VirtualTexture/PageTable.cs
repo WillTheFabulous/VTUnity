@@ -177,7 +177,7 @@ namespace VirtualTexture
                     //跳过白色背景
                     if (color.b != 255)
                     {
-                        uint pixel = ((uint)color.r << 24) | ((uint)color.g << 16) | ((uint)color.r << 8);
+                        uint pixel = ((uint)color.r << 24) | ((uint)color.g << 16) | ((uint)color.b << 8);
                         if (uniquePages.ContainsKey(pixel))
                         {
                             continue;
@@ -188,7 +188,7 @@ namespace VirtualTexture
                         }
                     }
 
-                    if (i == texWidth / 2 && j == texHeight / 2)
+                    if ((i == texWidth / 3 && j == texHeight / 3) || (i == texWidth * 2 / 3 && j == texHeight * 2 / 3))
                     {
                         yield return null;
                     }
@@ -202,12 +202,12 @@ namespace VirtualTexture
 
             int pageCount = 0;
             int numPage = uniquePages.Count;
-            int targetFrame = (int)Time.frameCount + 1;
+            int targetFrame = (int)Time.frameCount + 2;
             foreach (var kv in uniquePages)
             {
                 var color = kv.Value;
                 UseOrCreatePagePointer(color.r, color.g, color.b, (int)targetFrame);
-                if (pageCount == numPage / 2)
+                if (pageCount == numPage / 3 || pageCount == numPage * 2 / 3)
                 {
                     yield return null;
                 }

@@ -117,7 +117,7 @@ namespace VirtualTexture
             {
                 colorBuffers[0] = physicalTexture.PhysicalTextures[textureType].colorBuffer;
                 RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[textureType].depthBuffer;
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     RenderTargetSetup rtsMip = new RenderTargetSetup(colorBuffers, depthBuffer, i, CubemapFace.Unknown);
                     Graphics.SetRenderTarget(rtsMip);
@@ -139,6 +139,9 @@ namespace VirtualTexture
             List<Vector3> quadVertexList = new List<Vector3>();
             List<int> quadTriangleList = new List<int>();
             List<Vector2> quadUVList = new List<Vector2>();
+            List<Vector2> quadLODList = new List<Vector2>();
+
+
             int tableSize = pageTable.TableSize;
             //有可能出现的最高mip
             int maxMip = (int)Math.Log(tableSize, 2);
@@ -166,6 +169,11 @@ namespace VirtualTexture
                 quadUVList.Add(uv2);
                 quadUVList.Add(uv3);
 
+
+                quadLODList.Add(new Vector2(mip, mip));
+                quadLODList.Add(new Vector2(mip, mip));
+                quadLODList.Add(new Vector2(mip, mip));
+                quadLODList.Add(new Vector2(mip, mip));
 
 
                 float Width = (float)physicalTexture.PhysicalTextureSize.x;
@@ -238,6 +246,7 @@ namespace VirtualTexture
 
             mQuads.SetVertices(quadVertexList);
             mQuads.SetUVs(0, quadUVList);
+            mQuads.SetUVs(1, quadLODList);
             mQuads.SetTriangles(quadTriangleList, 0);
 
         }

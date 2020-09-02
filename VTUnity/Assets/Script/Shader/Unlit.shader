@@ -75,11 +75,12 @@ Shader "VirtualTexture/Unlit"
 					float2 dy = (vtSize / physicalSize.y) * ddy(i.uv);
 					float dotdx = dot(dx, dx);
 					float dotdy = dot(dy, dy);
+					
 
 
 					float vtMip = getMipStandard(i.uv);
 					
-					float physicalMip = clamp(vtMip, page.b, page.b + 3.0) - page.b;
+					float physicalMip = clamp(vtMip, page.b, page.b + 5.0) - page.b;
 					
 					float multiplier = exp2(physicalMip - vtMip);
 
