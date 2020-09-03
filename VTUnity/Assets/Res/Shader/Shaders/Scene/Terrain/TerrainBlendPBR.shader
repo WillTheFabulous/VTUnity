@@ -119,7 +119,7 @@ Properties{
 
 
     SubShader{
-        Tags{ "RenderType" = "Opaque" "Queue" = "Geometry+200" "PassFlags "="OnlyDirectional" "ShaderBatcher"="Enable"}
+        Tags{ "RenderType" = "Opaque" "Queue" = "Geometry+200" "PassFlags "="OnlyDirectional" "ShaderBatcher"="Enable" }
         LOD 400
 
         CGPROGRAM

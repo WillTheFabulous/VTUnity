@@ -15247,7 +15247,7 @@ MonoBehaviour:
   m_TileSize: 512
   m_PaddingSize: 8
   m_NumTextureType: 2
-  m_AnisoLevel: 9
+  m_AnisoLevel: 4
 --- !u!114 &1767657368
 MonoBehaviour:
   m_ObjectHideFlags: 0

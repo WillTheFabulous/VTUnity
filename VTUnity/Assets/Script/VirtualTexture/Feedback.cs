@@ -33,6 +33,7 @@ public class Feedback : MonoBehaviour
     {
         pageTable = (PageTable)GetComponent(typeof(PageTable));
         InitCamera();
+       
     }
 
     private void OnPreCull()

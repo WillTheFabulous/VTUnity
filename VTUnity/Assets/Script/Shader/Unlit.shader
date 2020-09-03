@@ -7,8 +7,13 @@ Shader "VirtualTexture/Unlit"
     {
         Tags { "VirtualTextureType"="Normal" }
 		LOD 100
+
+		
+
+
 		Pass
 		{
+			Tags {"LightMode" = "ForwardBase" }
 			CGPROGRAM
 			#include "UnityCG.cginc"
 			#include "VirtualTextureCommon.cginc"
@@ -115,6 +120,11 @@ Shader "VirtualTexture/Unlit"
 			
 			ENDCG
 		}
+
+		
+
+
+		 
     }
   
 }

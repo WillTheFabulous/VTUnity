@@ -20,11 +20,11 @@
     }
     SubShader
     {
-        Tags { "VirtualTextureType"="Normal" }
-        Cull Off ZWrite Off ZTest Always
- 
+        Tags{ "VirtualTextureType"="Normal" }
         Pass
         {
+            Tags { "LightMode" = "ForwardBase"}
+            Cull Off ZWrite Off ZTest Always
             CGPROGRAM
             #pragma vertex vertDraw
             #pragma fragment frag
@@ -89,6 +89,8 @@
         
         Pass
         {
+            Tags {"LightMode" = "ForwardBase"}
+            Cull Off ZWrite Off ZTest Always
             CGPROGRAM
             #pragma vertex vertDraw
             #pragma fragment frag
@@ -96,8 +98,8 @@
             #include "VirtualTextureCommon.cginc"
             #include "UnityCG.cginc"
         
-            UNITY_DECLARE_TEX2D(_Normal0);
-            UNITY_DECLARE_TEX2D_NOSAMPLER(_Normal1);
+            sampler2D _Normal0;
+            sampler2D _Normal1;
 
             UNITY_DECLARE_TEX2D(_AlphaMap);
 
@@ -106,24 +108,39 @@
 
             float4 _TileInfo[4];
 
-            v2f_img vertDraw(appData v){
-                v2f_img o;
-                UNITY_INITIALIZE_OUTPUT(v2f_img, o);
+            struct appTileData{
+                float4 vertex : POSITION;
+                float2 texcoord : TEXCOORD0;
+                float2 lod : TEXCOORD1;
+            };
+
+            struct v2f_tile{
+                float4 pos : SV_POSITION;
+                float2 uv : TEXCOORD0;
+                float2 lod : TEXCOORD1;
+            };
+
+            v2f_tile vertDraw(appTileData v){
+                v2f_tile o;
+                UNITY_INITIALIZE_OUTPUT(v2f_tile, o);
                 o.pos = v.vertex;
                 o.uv = v.texcoord;
+                o.lod = v.lod;
                 return o;
             };
         
-            fixed4 frag(v2f_img i) : SV_Target
+            fixed4 frag(v2f_tile i) : SV_Target
             {
                    
                 float4 alpha = UNITY_SAMPLE_TEX2D(_AlphaMap, i.uv);
 
-                float2 normal0UV = float2( frac(i.uv.x / (_TileInfo[0].x / _TerrainSize.x)),  frac(i.uv.y / (_TileInfo[0].y/ _TerrainSize.z) ));
-                float2 normal1UV = float2( frac(i.uv.x / (_TileInfo[1].x / _TerrainSize.x)),  frac(i.uv.y / (_TileInfo[1].y/ _TerrainSize.z) ));
+                float4 normal0UV = float4( frac(i.uv.x / (_TileInfo[0].x / _TerrainSize.x)),  frac(i.uv.y / (_TileInfo[0].y/ _TerrainSize.z) ), 0, i.lod.x - 1);
+                float4 normal1UV = float4( frac(i.uv.x / (_TileInfo[1].x / _TerrainSize.x)),  frac(i.uv.y / (_TileInfo[1].y/ _TerrainSize.z) ), 0, i.lod.x - 1);
 
-                float4 normal0 = UNITY_SAMPLE_TEX2D(_Normal0, normal0UV);
-                float4 normal1 = UNITY_SAMPLE_TEX2D_SAMPLER(_Normal1, _Normal0, normal1UV);
+
+           
+                float4 normal0 = tex2Dlod(_Normal0, normal0UV);
+                float4 normal1 = tex2Dlod(_Normal1, normal1UV);
 
                 fixed4 result = alpha.r * normal0 + alpha.g * normal1;
                 return result;
@@ -133,6 +150,62 @@
 
             ENDCG
         }
+
+        Pass
+        {
+            Tags {"LightMode" = "Deferred"}
+
+            Cull Off ZWrite Off ZTest Always
+            CGPROGRAM
+            #pragma vertex vertDraw
+            #pragma fragment frag
+      
+            #include "VirtualTextureCommon.cginc"
+            #include "UnityCG.cginc"
+        
+            sampler2D _Normal0;
+            sampler2D _Normal1;
+
+            UNITY_DECLARE_TEX2D(_AlphaMap);
+
+            float3 _TerrainSize;
+            float4 _Diffuse0_ST;
+
+            float4 _TileInfo[4];
+
+            struct appTileData{
+                float4 vertex : POSITION;
+                float2 texcoord : TEXCOORD0;
+                float2 lod : TEXCOORD1;
+            };
+
+            struct v2f_tile{
+                float4 pos : SV_POSITION;
+                float2 uv : TEXCOORD0;
+                float2 lod : TEXCOORD1;
+            };
+
+            v2f_tile vertDraw(appTileData v){
+                v2f_tile o;
+                UNITY_INITIALIZE_OUTPUT(v2f_tile, o);
+                o.pos = v.vertex;
+                o.uv = v.texcoord;
+                o.lod = v.lod;
+                return o;
+            };
+        
+            fixed4 frag(v2f_tile i) : SV_Target
+            {
+                   
+
+                return fixed4(0,1,0,1);
+
+            }
+        }
+
+       
+
+       
         
     }
     

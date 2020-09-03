@@ -23,7 +23,7 @@
             fixed4 frag(v2f i) : SV_Target
             {
                 float2 page = floor(i.uv * _PAGETABLESIZE);
-                float mip = clamp((int)getMip(i.uv) + _FEEDBACKBIAS, 0, _MAXMIP);
+                float mip = clamp((int)getMipStandard(i.uv) + _FEEDBACKBIAS, 0, _MAXMIP);
                 //新feedback方式
                 int mipLength = exp2(mip);
                 float2 pageResult =float2( floor(page.x / mipLength), floor(page.y/mipLength));

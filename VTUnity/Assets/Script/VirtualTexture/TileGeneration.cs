@@ -42,6 +42,7 @@ namespace VirtualTexture
         {
             TilesToGenerate = new List<int>();
             TileGeneratorMat = new Material(TileGenerator);
+            TileGeneratorMat.SetShaderPassEnabled("Always", false);
             LayerCount = DemoTerrain.terrainData.terrainLayers.Length;
 
             physicalTexture = (PhysicalTexture)GetComponent(typeof(PhysicalTexture));
@@ -119,10 +120,13 @@ namespace VirtualTexture
                 RenderBuffer depthBuffer = physicalTexture.PhysicalTextures[textureType].depthBuffer;
                 for (int i = 0; i < 10; i++)
                 {
+                    SetLod(TilesForMesh, i);
                     RenderTargetSetup rtsMip = new RenderTargetSetup(colorBuffers, depthBuffer, i, CubemapFace.Unknown);
                     Graphics.SetRenderTarget(rtsMip);
                     CommandBuffer tempCB = new CommandBuffer();
                     tempCB.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat, 0, textureType);
+                    //tempCB.DrawMesh(mQuads, Matrix4x4.identity, TileGeneratorMat);
+
                     Graphics.ExecuteCommandBuffer(tempCB);
                 }
             }
@@ -168,12 +172,6 @@ namespace VirtualTexture
                 quadUVList.Add(uv1);
                 quadUVList.Add(uv2);
                 quadUVList.Add(uv3);
-
-
-                quadLODList.Add(new Vector2(mip, mip));
-                quadLODList.Add(new Vector2(mip, mip));
-                quadLODList.Add(new Vector2(mip, mip));
-                quadLODList.Add(new Vector2(mip, mip));
 
 
                 float Width = (float)physicalTexture.PhysicalTextureSize.x;
@@ -246,9 +244,25 @@ namespace VirtualTexture
 
             mQuads.SetVertices(quadVertexList);
             mQuads.SetUVs(0, quadUVList);
-            mQuads.SetUVs(1, quadLODList);
             mQuads.SetTriangles(quadTriangleList, 0);
 
+        }
+
+        void SetLod(List<int> quadKeys, int lodBias)
+        {
+            List<Vector2> quadLODList = new List<Vector2>();
+            for (int i = 0; i < quadKeys.Count; i++)
+            {
+                int quadKey = quadKeys[i];
+                int mip = MortonUtility.getMip(quadKey) + lodBias;
+                quadLODList.Add(new Vector2(mip, mip));
+                quadLODList.Add(new Vector2(mip, mip));
+                quadLODList.Add(new Vector2(mip, mip));
+                quadLODList.Add(new Vector2(mip, mip));
+
+            }
+
+            mQuads.SetUVs(1, quadLODList);
         }
 
         public bool SetActive(Vector2Int tile)
